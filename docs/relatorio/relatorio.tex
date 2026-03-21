@@ -31,11 +31,7 @@
 \newcommand{\arquivo}[1]{\nolinkurl{#1}}
 \newcommand{\campo}[2]{\textbf{#1.} #2\par}
 \newcommand{\figexum}[1]{figuras/exercicio_01/#1}
-\newcommand{\itemsubsection}[2]{%
-  \subsection*{Item #1 -- #2}%
-  \phantomsection%
-  \addcontentsline{toc}{subsection}{Item #1 -- #2}%
-}
+\newcommand{\exerciciosubsection}[2]{\subsection{Exercício #1 -- #2}}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -90,38 +86,38 @@ Este relatório foi organizado separando a descrição do ambiente e das decisõ
 
 De acordo com o enunciado, os programas serão executados em ambiente Linux e os formatos de entrada e saída devem ser rigorosamente respeitados. As imagens utilizadas no trabalho estão no formato PNG, tanto para leitura quanto para gravação dos resultados. Além disso, o enunciado destaca que, quando pertinente, a vetorização de comandos deve ser empregada nas operações.
 
-\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python 3. O projeto utiliza a biblioteca Pillow apenas para leitura e escrita de imagens PNG, enquanto as transformações pedidas no enunciado são implementadas manualmente no código, sem uso de funções prontas de rotação. O restante da infraestrutura utiliza apenas a biblioteca padrão do Python.}
-\campo{Entrada de dados}{As imagens de entrada estão no formato PNG, conforme especificado no trabalho. No item 1.1 foi utilizada a imagem monocromática \arquivo{baboon\_monocromatica.png}, disponibilizada no site do professor e baixada automaticamente para \arquivo{data/input/exercicio\_01/}.}
-\campo{Saída de dados}{As imagens geradas pelo programa também devem ser salvas em PNG. Resultados intermediários podem ser exibidos em tela ou armazenados em arquivos auxiliares.}
+\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python 3. O projeto utiliza a biblioteca Pillow para leitura e escrita de imagens PNG, enquanto as transformações propostas no enunciado são implementadas no próprio código. O restante da infraestrutura foi mantido na biblioteca padrão do Python para simplificar a execução e reduzir dependências desnecessárias.}
+\campo{Entrada de dados}{O trabalho utiliza imagens monocromáticas e coloridas, de acordo com a natureza de cada exercício. Os arquivos de entrada são organizados por exercício em \arquivo{data/input/exercicio\_XX/}, o que facilita a separação entre casos de teste e a reprodução dos experimentos.}
+\campo{Saída de dados}{As imagens geradas também são salvas em PNG e organizadas por exercício em \arquivo{results/exercicio\_XX/}. Quando uma saída é usada no relatório, ela também é copiada para \arquivo{docs/relatorio/figuras/exercicio\_XX/}, mantendo o texto e os resultados visuais sincronizados.}
 
 \subsection{Organização do projeto}
 
-O projeto foi estruturado para separar a leitura e escrita das imagens das rotinas de processamento. Essa divisão facilita o reaproveitamento de código entre os itens do trabalho e torna mais clara a validação de cada transformação isoladamente.
+O projeto foi estruturado para separar a infraestrutura comum das rotinas específicas de cada exercício. Essa divisão facilita o reaproveitamento de código, reduz a duplicação entre exercícios e torna mais clara a manutenção do relatório e dos resultados gerados ao longo do desenvolvimento do trabalho.
 
 \campo{Organização de arquivos}{O enunciado e o relatório ficam em \arquivo{docs/}. As entradas de cada item são armazenadas em \arquivo{data/input/exercicio\_XX/}, enquanto os resultados gerados ficam em \arquivo{results/exercicio\_XX/}. O código compartilhado entre exercícios está em \arquivo{src/common/}, e cada exercício possui sua própria pasta em \arquivo{src/exercicio\_XX/}.}
-\campo{Representação das imagens}{Para o exercício 1, a imagem monocromática é carregada como uma matriz bidimensional de inteiros no intervalo $[0,255]$, indexada no formato linha-coluna. Assim, cada pixel pode ser acessado por \arquivo{imagem[i][j]}, o que facilita a aplicação direta das fórmulas de remapeamento de índices.}
-\campo{Convenções adotadas}{Os valores de intensidade permanecem no intervalo $[0,255]$ durante toda a execução do item 1.1, de modo que não há necessidade de clipping adicional nessa etapa. Nas rotações de $90^\circ$ e $270^\circ$, as dimensões da imagem de saída são trocadas para preservar corretamente a geometria do resultado.}
+\campo{Representação das imagens}{Imagens monocromáticas são tratadas como matrizes bidimensionais de inteiros no intervalo $[0,255]$. Imagens coloridas seguem a mesma organização espacial, mas com três componentes RGB por pixel. Essa escolha torna mais diretas tanto as operações pontuais quanto as transformações geométricas e de vizinhança.}
+\campo{Convenções adotadas}{O projeto utiliza indexação no formato linha-coluna, preserva a faixa de intensidades $[0,255]$ e aplica clipping quando uma transformação pode gerar valores fora desse intervalo. Quando a operação altera orientação ou dimensão, a imagem de saída é redimensionada de acordo com a transformação realizada.}
 
 \subsection{Estratégia geral de implementação}
 
 De forma geral, cada item do trabalho segue um mesmo fluxo: leitura da imagem PNG, aplicação da transformação solicitada, validação do resultado e gravação da nova imagem em disco. Esse fluxo é especialmente útil neste trabalho porque várias operações atuam diretamente sobre os valores da matriz da imagem, enquanto outras dependem de relações espaciais entre pixels vizinhos ou de combinações lineares entre canais de cor.
 
-\campo{Esboço do trabalho}{A implementação foi organizada em quatro blocos principais: (i) preparação automática das entradas, incluindo download de arquivos quando necessário, (ii) processamento específico de cada exercício, (iii) gravação dos resultados em pastas próprias, com cópia das figuras relevantes para o relatório em LaTeX, e (iv) compilação opcional do relatório por um script separado. Dessa forma, um problema de compilação em LaTeX não interrompe a geração dos resultados dos exercícios.}
-\campo{Estrutura do relatório}{Nesta versão do projeto, o item 1.1 foi implementado e documentado em detalhe. As demais subseções permanecem como estrutura-base para preenchimento à medida que os outros exercícios forem sendo desenvolvidos.}
+\campo{Esboço do trabalho}{A implementação foi pensada para atender aos 13 exercícios do enunciado por meio de uma base comum de leitura, preparação de entradas, execução do processamento e gravação das saídas. Cada exercício reutiliza a mesma infraestrutura e acrescenta apenas a lógica específica da transformação que está sendo estudada.}
+\campo{Estrutura do relatório}{O relatório foi organizado com uma parte inicial de caráter geral, dedicada ao contexto, ao ambiente e à metodologia do trabalho, seguida de uma seção de resultados estruturada exercício a exercício. Como o desenvolvimento ainda está em andamento, o exercício 1 já aparece documentado em detalhe, enquanto os demais permanecem como base para preenchimento futuro.}
 
 \subsection{Procedimento de testes}
 
 Os testes devem verificar tanto a corretude funcional das operações quanto a qualidade visual dos resultados. Em itens geométricos, a validação pode ser feita pela inspeção da disposição dos pixels e das dimensões da imagem. Em itens pontuais, a comparação entre valores de entrada e saída e a observação do histograma visual são úteis. Em filtragem e manipulação de cor, a análise visual das imagens geradas é essencial para discutir suavização, realce de contornos, preservação de detalhes e saturação.
 
-\campo{Conjunto de testes}{Para o item 1.1 foi utilizada a imagem \arquivo{baboon\_monocromatica.png}. Essa imagem é apropriada para o teste porque possui textura rica e orientação visual bem definida, o que facilita verificar se a rotação foi aplicada corretamente.}
-\campo{Registro das saídas}{As saídas do item 1.1 são salvas em \arquivo{results/exercicio\_01/} com nomes descritivos para cada ângulo: \arquivo{baboon\_rotacao\_90\_horario.png}, \arquivo{baboon\_rotacao\_180.png} e \arquivo{baboon\_rotacao\_270\_horario.png}. As imagens usadas no relatório são copiadas para \arquivo{docs/relatorio/figuras/exercicio\_01/}, enquanto a geração do PDF final é feita separadamente a partir de \arquivo{docs/relatorio/relatorio.tex}.}
-\campo{Critérios de validação}{A corretude foi verificada por inspeção visual e pela conferência da fórmula de mapeamento de índices. Também foi observado se as rotações de $90^\circ$ e $270^\circ$ mantinham a imagem coerente com a troca de dimensões esperada.}
+\campo{Conjunto de testes}{Os testes utilizam imagens escolhidas de acordo com o tipo de transformação avaliada, buscando contemplar texturas, regiões homogêneas, contraste e orientação espacial. No exercício 1, por exemplo, foi utilizada a imagem \arquivo{baboon\_monocromatica.png}, adequada para verificar rotações por possuir orientação visual bem definida.}
+\campo{Registro das saídas}{As saídas seguem uma convenção simples de organização por exercício. Os resultados são salvos em \arquivo{results/exercicio\_XX/}, com nomes compatíveis com a transformação aplicada, e as figuras selecionadas para o relatório são copiadas para \arquivo{docs/relatorio/figuras/exercicio\_XX/}.}
+\campo{Critérios de validação}{A validação combina inspeção visual, conferência de dimensões, análise do comportamento esperado da transformação e, quando pertinente, comparação direta entre índices ou intensidades. Essa abordagem permite avaliar tanto a corretude funcional quanto a qualidade visual das imagens produzidas.}
 
 \section{Resultados e Discussão}
 
-Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organização abaixo segue a numeração do enunciado para manter o relatório alinhado com a especificação oficial da atividade. Na versão atual do projeto, apenas o item 1.1 está implementado de forma completa; as demais subseções foram mantidas como roteiro para continuação do desenvolvimento.
+Esta seção apresenta os resultados obtidos em cada exercício do Trabalho 1. A organização abaixo mantém uma subseção própria para cada etapa solicitada no enunciado, o que facilita relacionar implementação, testes e resultados visuais. Na versão atual do projeto, apenas o exercício 1 está implementado de forma completa; as demais subseções foram mantidas como roteiro para continuação do desenvolvimento.
 
-\itemsubsection{1.1}{Rotação de Imagens em Múltiplos de 90 Graus}
+\exerciciosubsection{1}{Rotação de Imagens em Múltiplos de 90 Graus}
 
 \campo{Objetivo}{Dada uma imagem monocromática, implementar a rotação nos ângulos de 90 graus no sentido horário, 180 graus e 270 graus no sentido horário, sem utilizar funções prontas de rotação das bibliotecas.}
 \campo{Implementação}{A imagem de entrada é armazenada como uma matriz $A$ com altura $H$ e largura $W$. A rotação foi implementada por remapeamento direto dos índices, sem uso de funções prontas. Para a rotação de $90^\circ$ no sentido horário, foi utilizada a relação $B[j][H-1-i] = A[i][j]$, produzindo uma imagem de saída com dimensões $W \times H$. Para $180^\circ$, utilizou-se $B[H-1-i][W-1-j] = A[i][j]$. Para $270^\circ$ no sentido horário, a relação usada foi $B[W-1-j][i] = A[i][j]$, novamente com troca de dimensões entre linhas e colunas.}
@@ -155,17 +151,17 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
     \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_270_horario.png}}
     \caption*{Rotação de $270^\circ$}
   \end{minipage}
-  \caption{Resultados obtidos para o item 1.1 com a imagem \arquivo{baboon\_monocromatica.png}.}
+  \caption{Resultados obtidos para o exercício 1 com a imagem \arquivo{baboon\_monocromatica.png}.}
 \end{figure}
 
-\itemsubsection{1.2}{Ampliação de Imagem por Replicação}
+\exerciciosubsection{2}{Ampliação de Imagem por Replicação}
 
 \campo{Objetivo}{A partir de uma imagem monocromática, gerar versões ampliadas por replicação de pixels com fatores $2$ e $4$.}
 \campo{Implementação}{\placeholder{Explicar como cada pixel original foi replicado para formar blocos na imagem ampliada.}}
 \campo{Testes executados}{\placeholder{Descrever como foram conferidas as novas dimensões e a preservação do padrão visual da imagem.}}
 \campo{Discussão}{\placeholder{Comentar o efeito serrilhado esperado da replicação e comparar com o que seria obtido por interpolação.}}
 
-\itemsubsection{1.3}{Esboço a Lápis}
+\exerciciosubsection{3}{Esboço a Lápis}
 
 \campo{Objetivo}{Implementar um efeito de esboço a lápis em uma imagem colorida por meio dos passos descritos no enunciado: conversão para níveis de cinza, aplicação de filtro gaussiano de desfoque e divisão da imagem em tons de cinza pela versão desfocada.}
 \campo{Implementação}{\placeholder{Descrever as etapas utilizadas, indicando como a imagem foi convertida para cinza, como o desfoque gaussiano foi aplicado e como a divisão entre imagens foi tratada numericamente.}}
@@ -173,7 +169,7 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
 \campo{Testes executados}{\placeholder{Informar quais imagens foram usadas para avaliar contornos, sombras e regiões com diferentes níveis de textura.}}
 \campo{Discussão}{\placeholder{Comentar a aparência do efeito obtido e a influência do desfoque no realce das estruturas da imagem.}}
 
-\itemsubsection{1.4}{Ajuste de Brilho}
+\exerciciosubsection{4}{Ajuste de Brilho}
 
 \campo{Objetivo}{Aplicar correção gama para ajustar o brilho de uma imagem monocromática $A$ de entrada e gerar uma imagem monocromática $B$ de saída, utilizando diferentes valores de $\gamma$.}
 \campo{Implementação}{\placeholder{Descrever a transformação, incluindo a conversão do intervalo $[0,255]$ para $[0,1]$, a aplicação da equação e o retorno ao intervalo original.}}
@@ -185,7 +181,7 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
 \campo{Testes executados}{\placeholder{Registrar os valores de $\gamma$ avaliados, por exemplo $1{,}5$, $2{,}5$ e $3{,}5$, e comparar visualmente os resultados.}}
 \campo{Discussão}{\placeholder{Explicar como a variação de $\gamma$ afetou o brilho e o contraste da imagem.}}
 
-\itemsubsection{1.5}{Binarização por Limiar}
+\exerciciosubsection{5}{Binarização por Limiar}
 
 \campo{Objetivo}{Dada uma imagem monocromática $A$, gerar uma imagem binária $B$ a partir de um limiar fixo $T$.}
 \campo{Implementação}{A conversão é dada por:
@@ -200,14 +196,14 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
 \campo{Testes executados}{\placeholder{Informar os limiares testados e justificar a escolha do valor apresentado nos resultados.}}
 \campo{Discussão}{\placeholder{Discutir perdas de detalhe, sensibilidade a ruído e separação entre objeto e fundo.}}
 
-\itemsubsection{1.6}{Mosaico}
+\exerciciosubsection{6}{Mosaico}
 
 \campo{Objetivo}{Construir um mosaico de $4 \times 4$ blocos a partir de uma imagem monocromática, seguindo a nova ordem de blocos mostrada no enunciado.}
 \campo{Implementação}{\placeholder{Explicar como a imagem foi particionada em 16 blocos e como o remapeamento para a nova ordem foi realizado.}}
 \campo{Testes executados}{\placeholder{Descrever como foi validada a correspondência entre a ordem original e a ordem final dos blocos.}}
 \campo{Discussão}{\placeholder{Comentar o efeito visual obtido e os cuidados necessários quando a imagem precisa ser dividida exatamente em blocos de mesmo tamanho.}}
 
-\itemsubsection{1.7}{Alteração de Cores}
+\exerciciosubsection{7}{Alteração de Cores}
 
 \campo{Objetivo}{Implementar um filtro para simular o efeito de fotografias antigas por meio da aplicação de uma transformação linear nas cores da imagem.}
 \campo{Implementação}{Cada pixel deve ser multiplicado pela matriz:
@@ -222,7 +218,7 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
 \campo{Testes executados}{\placeholder{Indicar quais imagens foram usadas para observar tons de pele, vegetação, contraste e saturação.}}
 \campo{Discussão}{\placeholder{Comentar o efeito visual produzido pela transformação e o impacto do clipping em $255$.}}
 
-\itemsubsection{1.8}{Transformação de Imagens Coloridas}
+\exerciciosubsection{8}{Transformação de Imagens Coloridas}
 
 \campo{Objetivo}{Aplicar as transformações pedidas no enunciado para imagens RGB, contemplando tanto a transformação componente a componente quanto a conversão para uma única banda por média ponderada.}
 \campo{Implementação do item (a)}{A transformação componente a componente é dada por:
@@ -244,7 +240,7 @@ Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organ
 \campo{Testes executados}{\placeholder{Explicar como foram comparadas a saída colorida transformada e a versão em intensidade única.}}
 \campo{Discussão}{\placeholder{Comentar diferenças visuais entre a transformação colorida e a imagem gerada pela média ponderada.}}
 
-\itemsubsection{1.9}{Planos de Bits}
+\exerciciosubsection{9}{Planos de Bits}
 
 \campo{Objetivo}{Extrair os planos de bits de uma imagem monocromática, com base na representação de cada pixel como polinômio de base 2.}
 \campo{Fundamentação}{Para uma imagem monocromática com $m$ bits, os níveis de cinza podem ser representados por:
@@ -256,28 +252,28 @@ O plano de bits de ordem $0$ é formado pelos coeficientes $a_0$ e o plano de or
 \campo{Testes executados}{\placeholder{Descrever a análise dos planos de bits $0$, $4$ e $7$, conforme ilustrado no enunciado.}}
 \campo{Discussão}{\placeholder{Comentar a contribuição visual de cada plano de bits e a diferença entre planos menos e mais significativos.}}
 
-\itemsubsection{1.10}{Combinação de Imagens}
+\exerciciosubsection{10}{Combinação de Imagens}
 
 \campo{Objetivo}{Combinar duas imagens monocromáticas de mesmo tamanho por meio de média ponderada dos níveis de cinza.}
 \campo{Implementação}{\placeholder{Registrar a expressão utilizada, por exemplo $C = \alpha A + (1-\alpha)B$, e explicar os pesos escolhidos.}}
 \campo{Testes executados}{\placeholder{Descrever os pares de imagens usados e os resultados obtidos para pesos como $0{,}2/0{,}8$, $0{,}5/0{,}5$ e $0{,}8/0{,}2$.}}
 \campo{Discussão}{\placeholder{Comentar mistura visual, preservação de detalhes e transição gradual entre as duas imagens.}}
 
-\itemsubsection{1.11}{Transformação de Intensidade}
+\exerciciosubsection{11}{Transformação de Intensidade}
 
 \campo{Objetivo}{Dada uma imagem monocromática, realizar as transformações pedidas no enunciado. Isso inclui gerar o negativo da imagem, converter o intervalo de intensidades para o intervalo $[100,200]$, inverter os pixels das linhas pares, espelhar a metade superior na parte inferior e aplicar espelhamento vertical em toda a imagem.}
 \campo{Implementação}{\placeholder{Descrever cada transformação separadamente, deixando claro como o mapeamento de intensidades e as operações geométricas foram realizadas.}}
 \campo{Testes executados}{\placeholder{Explicar como cada subitem foi validado visualmente e, quando necessário, por conferência manual de pixels ou linhas.}}
 \campo{Discussão}{\placeholder{Comparar os efeitos do negativo, do remapeamento de intensidades e dos diferentes espelhamentos.}}
 
-\itemsubsection{1.12}{Quantização de Imagens}
+\exerciciosubsection{12}{Quantização de Imagens}
 
 \campo{Objetivo}{Representar uma imagem monocromática com diferentes números de níveis de cinza, explorando a relação entre quantização e profundidade da imagem.}
 \campo{Implementação}{\placeholder{Descrever o procedimento utilizado para gerar versões com 256, 64, 32, 16, 8, 4 e 2 níveis de cinza.}}
 \campo{Testes executados}{\placeholder{Indicar como a perda progressiva de níveis foi analisada nas imagens quantizadas.}}
 \campo{Discussão}{\placeholder{Comentar a degradação visual causada pela redução do número de níveis e em que ponto a perda de qualidade se torna mais evidente.}}
 
-\itemsubsection{1.13}{Filtragem de Imagens}
+\exerciciosubsection{13}{Filtragem de Imagens}
 
 \campo{Objetivo}{Aplicar os filtros $h_1$ a $h_{11}$ em uma imagem digital monocromática e explicar os efeitos produzidos por cada máscara.}
 \campo{Implementação}{No processo de filtragem, utiliza-se a operação de convolução entre a máscara e a imagem. O enunciado também solicita que os filtros $h_3$ e $h_4$ sejam aplicados individualmente e de forma combinada, por meio da expressão:
@@ -298,6 +294,6 @@ Nesta versão do projeto, apenas o exercício 1 está implementado. Assim, a pri
 
 O Trabalho 1 reúne um conjunto bastante variado de operações de processamento digital de imagens, cobrindo desde transformações simples por pixel até operações espaciais baseadas em vizinhança. Essa variedade torna o trabalho particularmente útil para comparar como diferentes classes de transformação afetam a aparência final da imagem e quais cuidados de implementação surgem em cada caso.
 
-Na versão atual, o item 1.1 mostrou-se um bom ponto de partida para consolidar a infraestrutura do projeto. A implementação manual das rotações permitiu verificar, de forma objetiva, como o remapeamento de índices controla completamente o resultado geométrico da transformação. Além de validar a corretude funcional das saídas geradas, esse exercício serviu para definir a organização geral do repositório, o fluxo de download de entradas, a gravação automática dos resultados e a integração das figuras com o relatório em LaTeX. As próximas etapas do trabalho poderão reutilizar essa mesma base estrutural para os demais itens do enunciado.
+Na versão atual, o exercício 1 mostrou-se um bom ponto de partida para consolidar a infraestrutura do projeto. A implementação manual das rotações permitiu verificar, de forma objetiva, como o remapeamento de índices controla completamente o resultado geométrico da transformação. Além de validar a corretude funcional das saídas geradas, esse exercício serviu para definir a organização geral do repositório, o fluxo de download de entradas, a gravação automática dos resultados e a integração das figuras com o relatório em LaTeX. As próximas etapas do trabalho poderão reutilizar essa mesma base estrutural para os demais exercícios do enunciado.
 
 \end{document}
