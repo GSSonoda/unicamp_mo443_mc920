@@ -23,4 +23,13 @@ __pycache__/
 *.snm
 *.synctex.gz
 *.toc
+
+# Local exercise inputs and outputs
+data/input/**
+results/**
+
+# Keep report figures tracked because they are part of the LaTeX source
+!docs/relatorio/figuras/
+!docs/relatorio/figuras/**
+
 .vscode/settings.json
