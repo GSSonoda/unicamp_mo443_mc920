@@ -89,6 +89,12 @@ Se quiser atualizar o PDF a partir do LaTeX:
 python build_report.py
 ```
 
-Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex` ou quiser atualizar as figuras do relatório a partir dos resultados locais mais recentes.
+Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex`.
+
+Se também quiser atualizar as figuras do relatório a partir dos resultados locais mais recentes, use:
+
+```bash
+python build_report.py --sync-figures
+```
 
 Para esse comando funcionar, o sistema precisa ter LaTeX com `latexmk` instalado.
