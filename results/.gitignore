@@ -1,7 +1,0 @@
-# Keep only the results that are useful for the current work.
-*
-!.gitignore
-!exercicio_01/
-!exercicio_01/baboon_rotacao_90_horario.png
-!exercicio_01/baboon_rotacao_180.png
-!exercicio_01/baboon_rotacao_270_horario.png

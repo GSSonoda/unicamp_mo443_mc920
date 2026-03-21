@@ -1,5 +1,0 @@
-# Keep only the files that are useful for the current work.
-*
-!.gitignore
-!exercicio_01/
-!exercicio_01/baboon_monocromatica.png
