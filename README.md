@@ -4,8 +4,6 @@ Este repositório contém o Trabalho 1 de Introdução ao Processamento Digital 
 
 O projeto foi organizado para suportar vários exercícios com a mesma estrutura de código, entradas, saídas e relatório.
 
-No momento, apenas o exercício 1 está implementado, mas a organização abaixo vale para os demais.
-
 ## 1. Montar o ambiente
 
 Use os comandos abaixo na raiz do repositório:
@@ -31,8 +29,6 @@ Para executar tudo que já está implementado no repositório:
 ```bash
 python run_all.py
 ```
-
-Hoje, esse comando executa apenas o exercício 1.
 
 Se quiser refazer os arquivos gerados, use:
 
