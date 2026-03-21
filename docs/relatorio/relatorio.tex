@@ -103,19 +103,11 @@ O projeto foi estruturado para separar a infraestrutura comum das rotinas espec�
 De forma geral, cada item do trabalho segue um mesmo fluxo: leitura da imagem PNG, aplicação da transformação solicitada, validação do resultado e gravação da nova imagem em disco. Esse fluxo é especialmente útil neste trabalho porque várias operações atuam diretamente sobre os valores da matriz da imagem, enquanto outras dependem de relações espaciais entre pixels vizinhos ou de combinações lineares entre canais de cor.
 
 \campo{Esboço do trabalho}{A implementação foi pensada para atender aos 13 exercícios do enunciado por meio de uma base comum de leitura, preparação de entradas, execução do processamento e gravação das saídas. Cada exercício reutiliza a mesma infraestrutura e acrescenta apenas a lógica específica da transformação que está sendo estudada.}
-\campo{Estrutura do relatório}{O relatório foi organizado com uma parte inicial de caráter geral, dedicada ao contexto, ao ambiente e à metodologia do trabalho, seguida de uma seção de resultados estruturada exercício a exercício. Como o desenvolvimento ainda está em andamento, o exercício 1 já aparece documentado em detalhe, enquanto os demais permanecem como base para preenchimento futuro.}
-
-\subsection{Procedimento de testes}
-
-Os testes devem verificar tanto a corretude funcional das operações quanto a qualidade visual dos resultados. Em itens geométricos, a validação pode ser feita pela inspeção da disposição dos pixels e das dimensões da imagem. Em itens pontuais, a comparação entre valores de entrada e saída e a observação do histograma visual são úteis. Em filtragem e manipulação de cor, a análise visual das imagens geradas é essencial para discutir suavização, realce de contornos, preservação de detalhes e saturação.
-
-\campo{Conjunto de testes}{Os testes utilizam imagens escolhidas de acordo com o tipo de transformação avaliada, buscando contemplar texturas, regiões homogêneas, contraste e orientação espacial. No exercício 1, por exemplo, foi utilizada a imagem \arquivo{baboon\_monocromatica.png}, adequada para verificar rotações por possuir orientação visual bem definida.}
-\campo{Registro das saídas}{As saídas seguem uma convenção simples de organização por exercício. Os resultados são salvos em \arquivo{results/exercicio\_XX/}, com nomes compatíveis com a transformação aplicada, e as figuras selecionadas para o relatório são copiadas para \arquivo{docs/relatorio/figuras/exercicio\_XX/}. Dessa forma, os diretórios de trabalho permanecem locais, enquanto apenas o material visual necessário para o relatório fica versionado.}
-\campo{Critérios de validação}{A validação combina inspeção visual, conferência de dimensões, análise do comportamento esperado da transformação e, quando pertinente, comparação direta entre índices ou intensidades. Essa abordagem permite avaliar tanto a corretude funcional quanto a qualidade visual das imagens produzidas.}
+\campo{Estrutura do relatório}{O relatório foi organizado com uma parte inicial de caráter geral, dedicada ao contexto, ao ambiente e à metodologia do trabalho, seguida de uma seção de resultados estruturada exercício a exercício.}
 
 \section{Resultados e Discussão}
 
-Esta seção apresenta os resultados obtidos em cada exercício do Trabalho 1. A organização abaixo mantém uma subseção própria para cada etapa solicitada no enunciado, o que facilita relacionar implementação, testes e resultados visuais. Na versão atual do projeto, apenas o exercício 1 está implementado de forma completa; as demais subseções foram mantidas como roteiro para continuação do desenvolvimento.
+Esta seção apresenta os resultados obtidos em cada exercício do Trabalho 1. A organização abaixo mantém uma subseção própria para cada etapa solicitada no enunciado, o que facilita relacionar implementação, testes e resultados visuais.
 
 \exerciciosubsection{1}{Rotação de Imagens em Múltiplos de 90 Graus}
 
@@ -129,13 +121,13 @@ Esta seção apresenta os resultados obtidos em cada exercício do Trabalho 1. A
   \begin{minipage}{0.48\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figexum{input_baboon_monocromatica.png}}
-    \caption*{Imagem original}
+    \caption{Imagem original}
   \end{minipage}
   \hfill
   \begin{minipage}{0.48\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_90_horario.png}}
-    \caption*{Rotação de $90^\circ$}
+    \caption{Rotação de $90^\circ$}
   \end{minipage}
 
   \vspace{0.8em}
@@ -143,15 +135,14 @@ Esta seção apresenta os resultados obtidos em cada exercício do Trabalho 1. A
   \begin{minipage}{0.48\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_180.png}}
-    \caption*{Rotação de $180^\circ$}
+    \caption{Rotação de $180^\circ$}
   \end{minipage}
   \hfill
   \begin{minipage}{0.48\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_270_horario.png}}
-    \caption*{Rotação de $270^\circ$}
+    \caption{Rotação de $270^\circ$}
   \end{minipage}
-  \caption{Resultados obtidos para o exercício 1 com a imagem \arquivo{baboon\_monocromatica.png}.}
 \end{figure}
 
 \exerciciosubsection{2}{Ampliação de Imagem por Replicação}
@@ -286,14 +277,8 @@ O plano de bits de ordem $0$ é formado pelos coeficientes $a_0$ e o plano de or
 
 \section{Conclusão}
 
-\subsection{Limitações}
-
-Nesta versão do projeto, apenas o exercício 1 está implementado. Assim, a principal limitação atual é a cobertura parcial do enunciado. Além disso, a leitura e escrita das imagens dependem da biblioteca Pillow, que precisa estar instalada no ambiente de execução. Para os exercícios ainda não implementados, permanecem em aberto decisões como tratamento de bordas em filtragem, parametrização de transformações pontuais e suporte a múltiplas imagens de entrada em alguns itens.
-
-\subsection{Síntese final}
-
 O Trabalho 1 reúne um conjunto bastante variado de operações de processamento digital de imagens, cobrindo desde transformações simples por pixel até operações espaciais baseadas em vizinhança. Essa variedade torna o trabalho particularmente útil para comparar como diferentes classes de transformação afetam a aparência final da imagem e quais cuidados de implementação surgem em cada caso.
 
-Na versão atual, o exercício 1 mostrou-se um bom ponto de partida para consolidar a infraestrutura do projeto. A implementação manual das rotações permitiu verificar, de forma objetiva, como o remapeamento de índices controla completamente o resultado geométrico da transformação. Além de validar a corretude funcional das saídas geradas, esse exercício serviu para definir a organização geral do repositório, o fluxo de download de entradas, a gravação automática dos resultados e a integração das figuras com o relatório em LaTeX. As próximas etapas do trabalho poderão reutilizar essa mesma base estrutural para os demais exercícios do enunciado.
+Além de validar a corretude funcional das saídas geradas, esse exercício serviu para definir a organização geral do repositório, o fluxo de download de entradas, a gravação automática dos resultados e a integração das figuras com o relatório em LaTeX. As próximas etapas do trabalho poderão reutilizar essa mesma base estrutural para os demais exercícios do enunciado.
 
 \end{document}
