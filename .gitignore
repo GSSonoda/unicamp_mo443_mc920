@@ -23,3 +23,4 @@ __pycache__/
 *.snm
 *.synctex.gz
 *.toc
+.vscode/settings.json
