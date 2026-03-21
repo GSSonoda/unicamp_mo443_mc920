@@ -1,0 +1,5 @@
+# Ignore downloaded inputs, but keep the folder structure.
+*
+!*/
+!.gitignore
+!**/.gitkeep

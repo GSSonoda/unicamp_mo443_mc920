@@ -1,0 +1,6 @@
+# Ignore generated report figures, but keep the folder structure and static assets.
+*
+!*/
+!.gitignore
+!logo_ic.png
+!**/.gitkeep

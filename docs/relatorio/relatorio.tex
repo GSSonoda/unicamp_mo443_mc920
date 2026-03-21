@@ -1,4 +1,4 @@
-% !TeX root = /home/gsonoda/project/unicamp/unicamp_mo443_mc920/docs/relatorio.tex
+% !TeX root = relatorio.tex
 \documentclass[12pt,a4paper]{article}
 
 \usepackage[T1]{fontenc}
@@ -29,6 +29,7 @@
 \newcommand{\placeholder}[1]{\textcolor{red}{\textbf{[Preencher: #1]}}}
 \newcommand{\arquivo}[1]{\texttt{#1}}
 \newcommand{\campo}[2]{\textbf{#1.} #2\par}
+\newcommand{\figexum}[1]{figuras/exercicio_01/#1}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -36,6 +37,13 @@
 
 \begin{titlepage}
   \centering
+
+  \includegraphics[width=0.24\textwidth]{figuras/logo_ic.png}\par
+  \vspace{0.8cm}
+  {\large Universidade Estadual de Campinas\par}
+  {\large Instituto de Computação\par}
+
+  \vspace{1.5cm}
 
   {\Large \textbf{Relatório de Implementação do Trabalho 1}\par}
   \vspace{0.5cm}
@@ -76,43 +84,73 @@ Este relatório foi organizado de modo semelhante ao modelo observado no relató
 
 De acordo com o enunciado, os programas serão executados em ambiente Linux e os formatos de entrada e saída devem ser rigorosamente respeitados. As imagens utilizadas no trabalho estão no formato PNG, tanto para leitura quanto para gravação dos resultados. Além disso, o enunciado destaca que, quando pertinente, a vetorização de comandos deve ser empregada nas operações.
 
-\campo{Linguagem e bibliotecas}{\placeholder{Informar a linguagem escolhida, a versão utilizada e as bibliotecas empregadas na leitura, processamento e escrita das imagens.}}
-\campo{Entrada de dados}{As imagens de entrada estão no formato PNG, conforme especificado no trabalho. \placeholder{Indicar quais imagens foram usadas nos experimentos e de onde elas foram obtidas.}}
+\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python 3. O projeto utiliza a biblioteca Pillow apenas para leitura e escrita de imagens PNG, enquanto as transformações pedidas no enunciado são implementadas manualmente no código, sem uso de funções prontas de rotação. O restante da infraestrutura utiliza apenas a biblioteca padrão do Python.}
+\campo{Entrada de dados}{As imagens de entrada estão no formato PNG, conforme especificado no trabalho. No item 1.1 foi utilizada a imagem monocromática \arquivo{baboon\_monocromatica.png}, disponibilizada no site do professor e baixada automaticamente para \arquivo{data/input/exercicio\_01/}.}
 \campo{Saída de dados}{As imagens geradas pelo programa também devem ser salvas em PNG. Resultados intermediários podem ser exibidos em tela ou armazenados em arquivos auxiliares.}
 
 \subsection{Organização do projeto}
 
-O projeto foi estruturado para separar a leitura e escrita das imagens das rotinas de processamento. Essa divisão facilita o reaproveitamento de código entre os itens do trabalho e torna mais clara a validação de cada transformação isoladamente. \placeholder{Listar aqui os arquivos reais do projeto e a responsabilidade de cada um, por exemplo: arquivo principal, módulo de operações em imagens monocromáticas, módulo de operações em imagens RGB, utilitários e pasta de resultados.}
+O projeto foi estruturado para separar a leitura e escrita das imagens das rotinas de processamento. Essa divisão facilita o reaproveitamento de código entre os itens do trabalho e torna mais clara a validação de cada transformação isoladamente.
 
-\campo{Organização de arquivos}{\placeholder{Descrever como as pastas de entrada, saída e código foram organizadas no repositório.}}
-\campo{Representação das imagens}{\placeholder{Explicar como as imagens são armazenadas em memória, indicando a convenção de índices, o tipo dos dados e a forma de acesso aos canais de cor.}}
-\campo{Convenções adotadas}{\placeholder{Comentar tratamento de overflow, clipping para o intervalo $[0,255]$, arredondamento, normalização e política para tratamento de bordas.}}
+\campo{Organização de arquivos}{O enunciado e o relatório ficam em \arquivo{docs/}. As entradas de cada item são armazenadas em \arquivo{data/input/exercicio\_XX/}, enquanto os resultados gerados ficam em \arquivo{results/exercicio\_XX/}. O código compartilhado entre exercícios está em \arquivo{src/common/}, e cada exercício possui sua própria pasta em \arquivo{src/exercicio\_XX/}.}
+\campo{Representação das imagens}{Para o exercício 1, a imagem monocromática é carregada como uma matriz bidimensional de inteiros no intervalo $[0,255]$, indexada no formato linha-coluna. Assim, cada pixel pode ser acessado por \arquivo{imagem[i][j]}, o que facilita a aplicação direta das fórmulas de remapeamento de índices.}
+\campo{Convenções adotadas}{Os valores de intensidade permanecem no intervalo $[0,255]$ durante toda a execução do item 1.1, de modo que não há necessidade de clipping adicional nessa etapa. Nas rotações de $90^\circ$ e $270^\circ$, as dimensões da imagem de saída são trocadas para preservar corretamente a geometria do resultado.}
 
 \subsection{Estratégia geral de implementação}
 
 De forma geral, cada item do trabalho segue um mesmo fluxo: leitura da imagem PNG, aplicação da transformação solicitada, validação do resultado e gravação da nova imagem em disco. Esse fluxo é especialmente útil neste trabalho porque várias operações atuam diretamente sobre os valores da matriz da imagem, enquanto outras dependem de relações espaciais entre pixels vizinhos ou de combinações lineares entre canais de cor.
 
-\campo{Esboço do trabalho}{A implementação pode ser entendida em três blocos principais: (i) infraestrutura de leitura e escrita de imagens, (ii) implementação das operações pedidas no enunciado e (iii) geração das saídas utilizadas para comparação visual e discussão dos resultados.}
-\campo{Estrutura do relatório}{O relatório final deve registrar, para cada item, o objetivo da operação, a estratégia de implementação, os parâmetros utilizados, os testes executados, os resultados obtidos e eventuais limitações observadas.}
+\campo{Esboço do trabalho}{A implementação foi organizada em quatro blocos principais: (i) preparação automática das entradas, incluindo download de arquivos quando necessário, (ii) processamento específico de cada exercício, (iii) gravação dos resultados em pastas próprias, com cópia das figuras relevantes para o relatório em LaTeX, e (iv) compilação opcional do relatório por um script separado. Dessa forma, um problema de compilação em LaTeX não interrompe a geração dos resultados dos exercícios.}
+\campo{Estrutura do relatório}{Nesta versão do projeto, o item 1.1 foi implementado e documentado em detalhe. As demais subseções permanecem como estrutura-base para preenchimento à medida que os outros exercícios forem sendo desenvolvidos.}
 
 \subsection{Procedimento de testes}
 
 Os testes devem verificar tanto a corretude funcional das operações quanto a qualidade visual dos resultados. Em itens geométricos, a validação pode ser feita pela inspeção da disposição dos pixels e das dimensões da imagem. Em itens pontuais, a comparação entre valores de entrada e saída e a observação do histograma visual são úteis. Em filtragem e manipulação de cor, a análise visual das imagens geradas é essencial para discutir suavização, realce de contornos, preservação de detalhes e saturação.
 
-\campo{Conjunto de testes}{\placeholder{Descrever quais imagens foram usadas em cada item e justificar a escolha delas.}}
-\campo{Registro das saídas}{\placeholder{Indicar o padrão de nomes dos arquivos gerados e onde eles foram armazenados.}}
-\campo{Critérios de validação}{\placeholder{Explicar como cada transformação foi validada: inspeção visual, conferência de dimensões, comparação de intensidade, testes com parâmetros diferentes, entre outros.}}
+\campo{Conjunto de testes}{Para o item 1.1 foi utilizada a imagem \arquivo{baboon\_monocromatica.png}. Essa imagem é apropriada para o teste porque possui textura rica e orientação visual bem definida, o que facilita verificar se a rotação foi aplicada corretamente.}
+\campo{Registro das saídas}{As saídas do item 1.1 são salvas em \arquivo{results/exercicio\_01/} com nomes descritivos para cada ângulo: \arquivo{baboon\_rotacao\_90\_horario.png}, \arquivo{baboon\_rotacao\_180.png} e \arquivo{baboon\_rotacao\_270\_horario.png}. As imagens usadas no relatório são copiadas para \arquivo{docs/relatorio/figuras/exercicio\_01/}, enquanto a geração do PDF final é feita separadamente a partir de \arquivo{docs/relatorio/relatorio.tex}.}
+\campo{Critérios de validação}{A corretude foi verificada por inspeção visual e pela conferência da fórmula de mapeamento de índices. Também foi observado se as rotações de $90^\circ$ e $270^\circ$ mantinham a imagem coerente com a troca de dimensões esperada.}
 
 \section{Resultados e Discussão}
 
-Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organização abaixo segue a numeração do enunciado para manter o relatório alinhado com a especificação oficial da atividade.
+Esta seção apresenta os resultados obtidos em cada item do Trabalho 1. A organização abaixo segue a numeração do enunciado para manter o relatório alinhado com a especificação oficial da atividade. Na versão atual do projeto, apenas o item 1.1 está implementado de forma completa; as demais subseções foram mantidas como roteiro para continuação do desenvolvimento.
 
 \subsection{Item 1.1 -- Rotação de Imagens em Múltiplos de 90 Graus}
 
 \campo{Objetivo}{Dada uma imagem monocromática, implementar a rotação nos ângulos de 90 graus no sentido horário, 180 graus e 270 graus no sentido horário, sem utilizar funções prontas de rotação das bibliotecas.}
-\campo{Implementação}{\placeholder{Descrever o mapeamento direto dos índices da matriz para cada ângulo e explicar como largura e altura foram tratadas nas rotações.}}
-\campo{Testes executados}{\placeholder{Comparar a imagem original com as três versões rotacionadas e registrar como a corretude foi conferida.}}
-\campo{Discussão}{\placeholder{Comentar simplicidade da solução, custo computacional e cuidados tomados para evitar erros de indexação.}}
+\campo{Implementação}{A imagem de entrada é armazenada como uma matriz $A$ com altura $H$ e largura $W$. A rotação foi implementada por remapeamento direto dos índices, sem uso de funções prontas. Para a rotação de $90^\circ$ no sentido horário, foi utilizada a relação $B[j][H-1-i] = A[i][j]$, produzindo uma imagem de saída com dimensões $W \times H$. Para $180^\circ$, utilizou-se $B[H-1-i][W-1-j] = A[i][j]$. Para $270^\circ$ no sentido horário, a relação usada foi $B[W-1-j][i] = A[i][j]$, novamente com troca de dimensões entre linhas e colunas.}
+\campo{Testes executados}{Foram geradas três saídas a partir da imagem original: rotações de $90^\circ$, $180^\circ$ e $270^\circ$. A validação foi feita observando se elementos visuais característicos da imagem apareciam nas posições esperadas após a transformação. Também foi verificado se as rotações de $90^\circ$ e $270^\circ$ preservavam a coerência espacial com a inversão entre altura e largura.}
+\campo{Discussão}{A solução é simples, direta e possui custo linear no número de pixels da imagem, isto é, $\mathcal{O}(HW)$. O principal cuidado de implementação foi garantir que os índices da imagem de saída fossem calculados corretamente para cada ângulo, evitando trocas entre linha e coluna ou inversões em ordem incorreta. Como a operação é puramente geométrica, os valores dos pixels são preservados integralmente e não há perda de intensidade ou necessidade de interpolação.}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figexum{input_baboon_monocromatica.png}}
+    \caption*{Imagem original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_90_horario.png}}
+    \caption*{Rotação de $90^\circ$}
+  \end{minipage}
+
+  \vspace{0.8em}
+
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_180.png}}
+    \caption*{Rotação de $180^\circ$}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figexum{baboon_rotacao_270_horario.png}}
+    \caption*{Rotação de $270^\circ$}
+  \end{minipage}
+  \caption{Resultados obtidos para o item 1.1 com a imagem \arquivo{baboon\_monocromatica.png}.}
+\end{figure}
 
 \subsection{Item 1.2 -- Ampliação de Imagem por Replicação}
 
@@ -248,12 +286,12 @@ O plano de bits de ordem $0$ é formado pelos coeficientes $a_0$ e o plano de or
 
 \subsection{Limitações}
 
-\placeholder{Listar as principais limitações da implementação, como tratamento de bordas, uso de parâmetros fixos, dependência do tamanho da imagem, ausência de otimizações específicas ou situações especiais não tratadas pelo programa.}
+Nesta versão do projeto, apenas o exercício 1 está implementado. Assim, a principal limitação atual é a cobertura parcial do enunciado. Além disso, a leitura e escrita das imagens dependem da biblioteca Pillow, que precisa estar instalada no ambiente de execução. Para os exercícios ainda não implementados, permanecem em aberto decisões como tratamento de bordas em filtragem, parametrização de transformações pontuais e suporte a múltiplas imagens de entrada em alguns itens.
 
 \subsection{Síntese final}
 
 O Trabalho 1 reúne um conjunto bastante variado de operações de processamento digital de imagens, cobrindo desde transformações simples por pixel até operações espaciais baseadas em vizinhança. Essa variedade torna o trabalho particularmente útil para comparar como diferentes classes de transformação afetam a aparência final da imagem e quais cuidados de implementação surgem em cada caso.
 
-\placeholder{Substituir este parágrafo por uma conclusão final baseada nos seus resultados, destacando os itens mais desafiadores, os principais aprendizados e as observações mais importantes obtidas nos testes.}
+Na versão atual, o item 1.1 mostrou-se um bom ponto de partida para consolidar a infraestrutura do projeto. A implementação manual das rotações permitiu verificar, de forma objetiva, como o remapeamento de índices controla completamente o resultado geométrico da transformação. Além de validar a corretude funcional das saídas geradas, esse exercício serviu para definir a organização geral do repositório, o fluxo de download de entradas, a gravação automática dos resultados e a integração das figuras com o relatório em LaTeX. As próximas etapas do trabalho poderão reutilizar essa mesma base estrutural para os demais itens do enunciado.
 
 \end{document}
