@@ -9,6 +9,7 @@ RESULTS_DIR = ROOT_DIR / "results"
 DOCS_DIR = ROOT_DIR / "docs"
 REPORT_DIR = DOCS_DIR / "relatorio"
 REPORT_FIGURES_DIR = REPORT_DIR / "figuras"
+BENCHMARKS_DIR = ROOT_DIR / "results" / "benchmarks"
 
 
 def normalize_exercise(exercise: int | str) -> str:
@@ -26,6 +27,10 @@ def input_dir_for(exercise: int | str) -> Path:
 
 def results_dir_for(exercise: int | str) -> Path:
     return RESULTS_DIR / normalize_exercise(exercise)
+
+
+def benchmarks_dir_for(exercise: int | str) -> Path:
+    return BENCHMARKS_DIR / normalize_exercise(exercise)
 
 
 def report_figures_dir_for(exercise: int | str) -> Path:

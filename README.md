@@ -40,10 +40,31 @@ Se quiser refazer os arquivos gerados, use:
 python main.py NUMERO_DO_EXERCICIO --overwrite
 ```
 
-## 3. Onde estão os arquivos
+## 3. Medir tempos de execução
+
+Para gerar um benchmark em JSON de um exercício:
+
+```bash
+python benchmark.py NUMERO_DO_EXERCICIO
+```
+
+Exemplo para o exercício 1:
+
+```bash
+python benchmark.py 1 --repeats 30 --warmup 3
+```
+
+Os benchmarks são salvos localmente em:
+
+- `results/benchmarks/exercicio_XX/tempos_execucao.json`
+
+Esse arquivo pode ser usado depois para montar tabelas ou comparações no relatório.
+
+## 4. Onde estão os arquivos
 
 - Entradas locais de cada exercício: `data/input/exercicio_XX/`
 - Resultados locais de cada exercício: `results/exercicio_XX/`
+- Benchmarks locais de cada exercício: `results/benchmarks/exercicio_XX/`
 - Figuras usadas no relatório: `docs/relatorio/figuras/exercicio_XX/`
 - Relatório pronto em PDF: `docs/relatorio/relatorio.pdf`
 - Fonte do relatório em LaTeX: `docs/relatorio/relatorio.tex`
@@ -52,7 +73,7 @@ As pastas `data/input/` e `results/` são geradas localmente durante a execuçã
 
 As figuras copiadas para `docs/relatorio/figuras/` são mantidas no repositório porque fazem parte do material usado pelo LaTeX.
 
-## 4. Relatório
+## 5. Relatório
 
 O PDF já está pronto em:
 
@@ -62,7 +83,7 @@ docs/relatorio/relatorio.pdf
 
 Se quiser apenas consultar o trabalho, esse é o arquivo principal.
 
-## 5. Gerar o relatório novamente (opcional)
+## 6. Gerar o relatório novamente (opcional)
 
 Se quiser atualizar o PDF a partir do LaTeX:
 
@@ -73,7 +94,3 @@ python build_report.py
 Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex` e quiser gerar um novo PDF.
 
 Para esse comando funcionar, o sistema precisa ter LaTeX com `latexmk` instalado.
-
-## 6. Observação sobre implementação atual
-
-Atualmente, o exercício 1 é o único exercício implementado no código.

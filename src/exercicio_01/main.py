@@ -7,6 +7,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
+from src.common.inputs import prepare_inputs
+from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.report import copy_report_files
 from src.common.runner import run_exercise
 
@@ -56,6 +58,18 @@ def rotate_270_clockwise(image: list[list[int]]) -> list[list[int]]:
     return rotated
 
 
+def rotate_90_clockwise_alt(image: list[list[int]]) -> list[list[int]]:
+    return [list(row) for row in zip(*image[::-1])]
+
+
+def rotate_180_alt(image: list[list[int]]) -> list[list[int]]:
+    return [row[::-1] for row in image[::-1]]
+
+
+def rotate_270_clockwise_alt(image: list[list[int]]) -> list[list[int]]:
+    return [list(row) for row in zip(*image)][::-1]
+
+
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     image = load_grayscale_image(input_paths["imagem"])
 
@@ -80,6 +94,78 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
 
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
+
+def run_benchmarks(
+    repeats: int = 20,
+    warmup: int = 2,
+    overwrite_inputs: bool = False,
+) -> Path:
+    input_paths = prepare_inputs(EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs)
+    image = load_grayscale_image(input_paths["imagem"])
+    height = len(image)
+    width = len(image[0]) if height else 0
+
+    benchmarks = {
+        "rotation_90": {
+            "nao_vetorizado": benchmark_function(
+                rotate_90_clockwise,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "alternativa_compreensao": benchmark_function(
+                rotate_90_clockwise_alt,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+        "rotation_180": {
+            "nao_vetorizado": benchmark_function(
+                rotate_180,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "alternativa_compreensao": benchmark_function(
+                rotate_180_alt,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+        "rotation_270": {
+            "nao_vetorizado": benchmark_function(
+                rotate_270_clockwise,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "alternativa_compreensao": benchmark_function(
+                rotate_270_clockwise_alt,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+    }
+
+    output_path = write_benchmark_results(
+        EXERCISE_NAME,
+        "tempos_execucao.json",
+        {
+            "exercise": EXERCISE_NAME,
+            "image": {
+                "filename": input_paths["imagem"].name,
+                "width": width,
+                "height": height,
+            },
+            "benchmarks": benchmarks,
+        },
+    )
+    print(f"[ok] Benchmark salvo em: {output_path}")
+    return output_path
 
 
 if __name__ == "__main__":
