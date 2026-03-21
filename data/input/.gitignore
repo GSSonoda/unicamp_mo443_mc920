@@ -1,5 +1,5 @@
-# Ignore downloaded inputs, but keep the folder structure.
+# Keep only the files that are useful for the current work.
 *
-!*/
 !.gitignore
-!**/.gitkeep
+!exercicio_01/
+!exercicio_01/baboon_monocromatica.png

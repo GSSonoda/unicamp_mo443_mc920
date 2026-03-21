@@ -20,7 +20,7 @@ def copy_report_files(
         copy2(source, destination)
         copied[filename] = destination
 
-    print(f"[info] report figures directory: {target_dir}")
+    print(f"[info] Pasta das figuras do relatorio: {target_dir}")
     return copied
 
 
@@ -28,8 +28,8 @@ def build_report() -> Path:
     tex_path = REPORT_DIR / "relatorio.tex"
     pdf_path = REPORT_DIR / "relatorio.pdf"
 
-    print(f"[info] report source: {tex_path}", flush=True)
-    print(f"[info] report output: {pdf_path}", flush=True)
+    print(f"[info] Fonte do relatorio: {tex_path}", flush=True)
+    print(f"[info] PDF do relatorio: {pdf_path}", flush=True)
 
     try:
         run(
@@ -48,5 +48,5 @@ def build_report() -> Path:
     except CalledProcessError as exc:
         raise RuntimeError("Falha ao gerar o PDF do relatorio.") from exc
 
-    print(f"[ok] report generated: {pdf_path}", flush=True)
+    print(f"[ok] PDF gerado: {pdf_path}", flush=True)
     return pdf_path

@@ -1,119 +1,69 @@
-# MO443 / MC920
+# Trabalho 1 - MC920 / MO443
 
-Repositório do Trabalho 1 de Introdução ao Processamento Digital de Imagens.
+Este repositório contém o Trabalho 1 de Introdução ao Processamento Digital de Imagens.
 
-O trabalho tem 13 exercícios. A organização foi feita para deixar o fluxo simples para o professor, separar a execução do código da geração do relatório e reaproveitar o que é comum entre os exercícios.
+No momento, apenas o exercício 1 está implementado.
 
-## Fluxo recomendado
+## 1. Montar o ambiente
 
-Instale a única dependência do código:
-
-```bash
-python3 -m pip install -r requirements.txt
-```
-
-Execute um exercício específico:
+Use os comandos abaixo na raiz do repositório:
 
 ```bash
-python3 main.py 1
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Execute tudo que já estiver implementado:
+Se você já tiver um ambiente virtual ativo, basta instalar o `requirements.txt`.
+
+## 2. Executar
+
+Para executar o exercício 1:
 
 ```bash
-python3 run_all.py
+python main.py 1
 ```
 
-Gere o PDF do relatório em uma etapa separada:
+Para executar tudo que já está implementado no repositório:
 
 ```bash
-python3 build_report.py
+python run_all.py
 ```
 
-Essa separação evita que um problema de LaTeX atrapalhe a execução dos exercícios.
+Hoje, esse comando executa apenas o exercício 1.
 
-## Onde ficam os arquivos
+Se quiser refazer os arquivos gerados, use:
 
-- Inputs baixados ou copiados: `data/input/exercicio_XX/`
-- Resultados gerados pelos exercícios: `results/exercicio_XX/`
-- Figuras copiadas para o relatório: `docs/relatorio/figuras/exercicio_XX/`
+```bash
+python main.py 1 --overwrite
+```
+
+## 3. Onde estão os arquivos
+
+- Entrada do exercício 1: `data/input/exercicio_01/baboon_monocromatica.png`
+- Resultados do exercício 1: `results/exercicio_01/`
+- Figuras usadas no relatório: `docs/relatorio/figuras/exercicio_01/`
+- Relatório pronto em PDF: `docs/relatorio/relatorio.pdf`
 - Fonte do relatório em LaTeX: `docs/relatorio/relatorio.tex`
-- PDF final do relatório: `docs/relatorio/relatorio.pdf`
 
-Ao executar um exercício, o projeto:
+## 4. Relatório
 
-- baixa automaticamente as imagens de entrada necessárias, se ainda não existirem;
-- salva as entradas em `data/input/exercicio_XX/`;
-- executa a transformação;
-- salva as saídas em `results/exercicio_XX/`.
-- copia para `docs/relatorio/figuras/exercicio_XX/` as imagens que serão usadas como figuras no LaTeX.
-
-No caso do exercício 1, os caminhos principais ficam assim:
-
-- input: `data/input/exercicio_01/baboon_monocromatica.png`
-- outputs:
-  - `results/exercicio_01/baboon_rotacao_90_horario.png`
-  - `results/exercicio_01/baboon_rotacao_180.png`
-  - `results/exercicio_01/baboon_rotacao_270_horario.png`
-- figures used in the report:
-  - `docs/relatorio/figuras/exercicio_01/input_baboon_monocromatica.png`
-  - `docs/relatorio/figuras/exercicio_01/baboon_rotacao_90_horario.png`
-  - `docs/relatorio/figuras/exercicio_01/baboon_rotacao_180.png`
-  - `docs/relatorio/figuras/exercicio_01/baboon_rotacao_270_horario.png`
-- final PDF:
-  - `docs/relatorio/relatorio.pdf`
-
-Para sobrescrever entradas e saídas já existentes:
-
-```bash
-python3 main.py 1 --overwrite
-```
-
-## Para o professor
-
-Se a ideia for apenas reproduzir o que já está implementado, os comandos principais são:
-
-```bash
-python3 -m pip install -r requirements.txt
-python3 run_all.py
-python3 build_report.py
-```
-
-O primeiro comando instala `Pillow`, o segundo gera as imagens e organiza os arquivos do trabalho, e o terceiro compila o PDF do relatório a partir do LaTeX.
-
-## Estrutura
+O PDF já está pronto em:
 
 ```text
-.
-├── docs/
-│   ├── enunciado/
-│   └── relatorio/
-├── data/
-│   └── input/
-│       └── exercicio_XX/
-├── results/
-│   └── exercicio_XX/
-├── src/
-│   ├── common/
-│   └── exercicio_XX/
-├── main.py
-└── requirements.txt
+docs/relatorio/relatorio.pdf
 ```
 
-## Ideia da estrutura
+Se quiser apenas consultar o trabalho, esse é o arquivo principal.
 
-- `src/common/` concentra o que se repete entre exercícios.
-- `src/exercicio_XX/` contém a lógica específica de cada exercício.
-- `data/input/exercicio_XX/` guarda as entradas usadas.
-- `results/exercicio_XX/` guarda as saídas geradas.
-- `docs/relatorio/figuras/exercicio_XX/` guarda as figuras usadas no relatório.
-- `build_report.py` compila o PDF sem interferir na execução dos exercícios.
+## 5. Gerar o relatório novamente (opcional)
 
-## O que já está implementado
+Se quiser atualizar o PDF a partir do LaTeX:
 
-- Exercício 1: rotação de imagens monocromáticas em 90, 180 e 270 graus.
-- Os demais exercícios continuam só com a estrutura de pastas e README.
+```bash
+python build_report.py
+```
 
-## Observação
+Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex` e quiser gerar um novo PDF.
 
-No exercício 1, a leitura e escrita da imagem PNG usam Pillow, mas a rotação é feita manualmente por manipulação de índices, como pedido no enunciado.
+Para esse comando funcionar, o sistema precisa ter LaTeX com `latexmk` instalado.

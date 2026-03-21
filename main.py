@@ -10,12 +10,12 @@ IMPLEMENTADOS = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Executa os exercicios do Trabalho 1."
+        description="Executa um exercicio implementado do Trabalho 1."
     )
     parser.add_argument(
         "exercicio",
         type=int,
-        help="Numero do exercicio, por exemplo 1 para executar o exercicio 1.",
+        help="Numero do exercicio. Atualmente, apenas o exercicio 1 esta implementado.",
     )
     parser.add_argument(
         "--overwrite",
@@ -33,7 +33,7 @@ def run_exercicio(numero: int, overwrite: bool) -> int:
         return 0
 
     if 1 <= numero <= 13:
-        print(f"[erro] Exercicio {numero:02d} ainda nao foi implementado.")
+        print("[erro] Apenas o exercicio 1 esta implementado no momento.")
         return 1
 
     print("[erro] O trabalho possui exercicios de 1 a 13.")

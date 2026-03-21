@@ -1,6 +1,9 @@
-# Ignore generated report figures, but keep the folder structure and static assets.
+# Keep only the figures used by the current report.
 *
-!*/
 !.gitignore
 !logo_ic.png
-!**/.gitkeep
+!exercicio_01/
+!exercicio_01/input_baboon_monocromatica.png
+!exercicio_01/baboon_rotacao_90_horario.png
+!exercicio_01/baboon_rotacao_180.png
+!exercicio_01/baboon_rotacao_270_horario.png

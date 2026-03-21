@@ -5,7 +5,7 @@ from src.common.report import build_report
 
 def main() -> int:
     try:
-        print("[info] building the PDF report", flush=True)
+        print("[info] Gerando o PDF do relatorio", flush=True)
         build_report()
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:

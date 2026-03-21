@@ -15,8 +15,8 @@ def run_exercise(
     input_dir = input_dir_for(exercise)
     output_dir = results_dir_for(exercise)
 
-    print(f"[info] inputs directory: {input_dir}")
-    print(f"[info] results directory: {output_dir}")
+    print(f"[info] Pasta de entrada: {input_dir}")
+    print(f"[info] Pasta de saida: {output_dir}")
 
     input_paths = prepare_inputs(exercise, inputs, overwrite=overwrite)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -29,6 +29,6 @@ def run_exercise(
         created = [created]
 
     for path in created:
-        print(f"[ok] saida gerada: {path}")
+        print(f"[ok] Saida gerada: {path}")
 
     return list(created)
