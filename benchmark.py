@@ -45,12 +45,18 @@ def main() -> int:
                 overwrite_inputs=args.overwrite_inputs,
             )
             return 0
+        
+        if args.exercicio == 2:
+            from src.exercicio_02.main import run_benchmarks
 
-        if 1 <= args.exercicio <= 13:
-            print("[erro] Apenas o exercicio 1 possui benchmark no momento.")
-            return 1
+            run_benchmarks(
+                repeats=args.repeats,
+                warmup=args.warmup,
+                overwrite_inputs=args.overwrite_inputs,
+            )
+            return 0
 
-        print("[erro] O trabalho possui exercicios de 1 a 13.")
+        print("[erro] numero de exercicio invalido.")
         return 1
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"[erro] {exc}")

@@ -69,6 +69,8 @@ As pastas `data/input/` e `results/` são geradas localmente durante a execuçã
 
 As figuras copiadas para `docs/relatorio/figuras/` são mantidas no repositório porque fazem parte do material usado pelo LaTeX.
 
+As figuras do relatório só são atualizadas quando você executa `python build_report.py`. Rodar os exercícios isoladamente não altera `docs/relatorio/figuras/`.
+
 ## 5. Relatório
 
 O PDF já está pronto em:
@@ -87,6 +89,6 @@ Se quiser atualizar o PDF a partir do LaTeX:
 python build_report.py
 ```
 
-Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex` e quiser gerar um novo PDF.
+Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex` ou quiser atualizar as figuras do relatório a partir dos resultados locais mais recentes.
 
 Para esse comando funcionar, o sistema precisa ter LaTeX com `latexmk` instalado.

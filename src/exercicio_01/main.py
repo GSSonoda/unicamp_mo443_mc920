@@ -9,7 +9,7 @@ if __package__ in (None, ""):
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
 from src.common.inputs import prepare_inputs
 from src.common.benchmark import benchmark_function, write_benchmark_results
-from src.common.report import copy_report_files
+from src.common.paths import input_dir_for, results_dir_for
 from src.common.runner import run_exercise
 
 
@@ -78,22 +78,23 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
         "baboon_rotacao_180.png": rotate_180(image),
         "baboon_rotacao_270_horario.png": rotate_270_clockwise(image),
     }
-    created = save_grayscale_outputs(output_dir, outputs)
-
-    # Keep a local copy of the input and outputs next to the report.
-    copy_report_files(
-        EXERCISE_NAME,
-        {
-            "input_baboon_monocromatica.png": input_paths["imagem"],
-            **{path.name: path for path in created},
-        },
-    )
-
-    return created
+    return save_grayscale_outputs(output_dir, outputs)
 
 
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
+
+def report_files() -> dict[str, Path]:
+    input_dir = input_dir_for(EXERCISE_NAME)
+    output_dir = results_dir_for(EXERCISE_NAME)
+
+    return {
+        "input_baboon_monocromatica.png": input_dir / "baboon_monocromatica.png",
+        "baboon_rotacao_90_horario.png": output_dir / "baboon_rotacao_90_horario.png",
+        "baboon_rotacao_180.png": output_dir / "baboon_rotacao_180.png",
+        "baboon_rotacao_270_horario.png": output_dir / "baboon_rotacao_270_horario.png",
+    }
 
 
 def run_benchmarks(

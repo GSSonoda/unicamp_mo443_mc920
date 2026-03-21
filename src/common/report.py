@@ -14,6 +14,11 @@ def copy_report_files(
     target_dir = report_figures_dir_for(exercise)
     target_dir.mkdir(parents=True, exist_ok=True)
 
+    missing_sources = [source for source in files.values() if not source.exists()]
+    if missing_sources:
+        missing = ", ".join(str(path) for path in missing_sources)
+        raise FileNotFoundError(f"Arquivos necessarios para o relatorio nao encontrados: {missing}")
+
     copied: dict[str, Path] = {}
     for filename, source in files.items():
         destination = target_dir / filename
@@ -22,6 +27,13 @@ def copy_report_files(
 
     print(f"[info] Pasta das figuras do relatorio: {target_dir}")
     return copied
+
+
+def sync_report_assets() -> None:
+    from src.exercicio_01.main import report_files as exercicio_01_report_files
+
+    print("[info] Atualizando figuras do relatorio", flush=True)
+    copy_report_files("exercicio_01", exercicio_01_report_files())
 
 
 def build_report() -> Path:

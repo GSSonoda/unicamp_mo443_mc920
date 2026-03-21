@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from src.exercicio_01.main import run as run_exercicio_01
+from src.exercicio_02.main import run as run_exercicio_02
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,6 +24,7 @@ def main() -> int:
     try:
         print("[info] Executando o exercicio 1")
         run_exercicio_01(overwrite=args.overwrite)
+        run_exercicio_02(overwrite=args.overwrite)
         print("[ok] Execucao concluida")
         print("[info] Entrada: data/input/exercicio_01/baboon_monocromatica.png")
         print("[info] Resultados: results/exercicio_01/")
