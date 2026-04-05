@@ -6,7 +6,7 @@ import numpy as np
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.common.image_io import load_rgb_image, load_grayscale_image, save_grayscale_outputs
+from src.common.image_io import load_grayscale_image, save_grayscale_outputs
 from src.common.paths import results_dir_for, input_dir_for
 from src.common.runner import run_exercise
 
