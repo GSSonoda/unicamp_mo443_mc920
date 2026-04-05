@@ -33,3 +33,4 @@ results/**
 !docs/relatorio/figuras/**
 
 .vscode/settings.json
+.ruff_cache/
