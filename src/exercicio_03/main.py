@@ -171,6 +171,7 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     img_sketch_effect = divide_images(img_grayscale, img_gaussian_blur)
 
     outputs = {
+        "whatch_grayscale.png": img_grayscale,
         "watch_gaussian_blur.png": img_gaussian_blur,
         "watch_sketch_effect.png": img_sketch_effect,
     }
@@ -181,7 +182,8 @@ def report_files() -> dict[str, Path]:
     output_dir = results_dir_for(EXERCISE_NAME)
 
     return {
-        "watch_grayscale.png": input_dir / "watch_grayscale.png",
+        "watch.png": input_dir / "watch.png",
+        "whatch_grayscale.png": output_dir / "watch_grayscale.png",
         "watch_gaussian_blur.png": output_dir / "watch_gaussian_blur.png",
         "watch_sketch_effect.png": output_dir / "watch_sketch_effect.png",
     }
