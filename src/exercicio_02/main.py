@@ -51,8 +51,8 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     image = load_grayscale_image(input_paths["imagem"])
 
     outputs = {
-        "imagem_2x.png": image_upscaling_2x(image),
-        "imagem_4x.png": image_upscaling_4x_vectorized(image),
+        "baboon_2x.png": image_upscaling_2x(image),
+        "baboon_4x.png": image_upscaling_4x_vectorized(image),
     }
     return save_grayscale_outputs(output_dir, outputs)
 

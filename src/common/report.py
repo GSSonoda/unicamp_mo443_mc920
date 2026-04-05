@@ -32,10 +32,13 @@ def copy_report_files(
 def sync_report_assets() -> None:
     from src.exercicio_01.main import report_files as exercicio_01_report_files
     from src.exercicio_02.main import report_files as exercicio_02_report_files
+    from src.exercicio_03.main import report_files as exercicio_03_report_files
 
     print("[info] Atualizando figuras do relatorio", flush=True)
     copy_report_files("exercicio_01", exercicio_01_report_files())
     copy_report_files("exercicio_02", exercicio_02_report_files())
+    copy_report_files("exercicio_03", exercicio_03_report_files())
+
     print("[ok] Figuras do relatorio atualizadas", flush=True)
 
 def build_report() -> Path:
