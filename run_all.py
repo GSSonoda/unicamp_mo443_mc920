@@ -5,6 +5,8 @@ import argparse
 from src.exercicio_01.main import run as run_exercicio_01
 from src.exercicio_02.main import run as run_exercicio_02
 from src.exercicio_03.main import run as run_exercicio_03
+from src.exercicio_04.main import run as run_exercicio_04
+from src.exercicio_05.main import run as run_exercicio_05
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,12 +29,9 @@ def main() -> int:
         run_exercicio_01(overwrite=args.overwrite)
         run_exercicio_02(overwrite=args.overwrite)
         run_exercicio_03(overwrite=args.overwrite)
+        run_exercicio_04(overwrite=args.overwrite)
+        run_exercicio_05(overwrite=args.overwrite)
         print("[ok] Execucao concluida")
-        print("[info] Entrada: data/input/exercicio_01/baboon_monocromatica.png")
-        print("[info] Resultados: results/exercicio_01/")
-        print("[info] Figuras do relatorio: docs/relatorio/figuras/exercicio_01/")
-        print("[info] Relatorio pronto: docs/relatorio/relatorio.pdf")
-        print("[info] Para atualizar o PDF, execute opcionalmente: python3 build_report.py")
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"[erro] {exc}")
