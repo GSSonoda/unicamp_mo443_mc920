@@ -7,39 +7,39 @@ if __package__ in (None, ""):
 from src.common.image_io import load_rgb_image, save_rgb_outputs
 from src.common.runner import run_exercise
 
-EXERCISE_NAME = "exercicio_07"
+EXERCISE_NAME = "exercicio_08"
 INPUTS = {
     "imagem": "https://www.ic.unicamp.br/~helio/imagens_png/watch.png",
 }
-TRANSFORMATION_MATRIX = [
-    [0.393, 0.769, 0.189],
-    [0.349, 0.686, 0.168],
-    [0.272, 0.534, 0.131],
-]
+RED_TRANSFORM = [0.393, 0.769, 0.189]
+GREEN_TRANSFORM = [0.349, 0.686, 0.168]
+BLUE_TRANSFORM = [0.272, 0.534, 0.131]
 
 
 def image_color_transform(
     image: list[list[tuple[int, int, int]]],
-    transform_matrix: list[list[float]] = TRANSFORMATION_MATRIX,
+    red_transform: list[float] = RED_TRANSFORM,
+    green_transform: list[float] = GREEN_TRANSFORM,
+    blue_transform: list[float] = BLUE_TRANSFORM,
 ) -> list[list[tuple[int, int, int]]]:
     output_image = [[(0, 0, 0)] * len(image[0]) for _ in range(len(image))]
     for i in range(len(image)):
         for j in range(len(image[0])):
             r, g, b = image[i][j]
             new_r = int(
-                transform_matrix[0][0] * r
-                + transform_matrix[0][1] * g
-                + transform_matrix[0][2] * b
+                red_transform[0] * r
+                + red_transform[1] * g
+                + red_transform[2] * b
             )
             new_g = int(
-                transform_matrix[1][0] * r
-                + transform_matrix[1][1] * g
-                + transform_matrix[1][2] * b
+                green_transform[0] * r
+                + green_transform[1] * g
+                + green_transform[2] * b
             )
             new_b = int(
-                transform_matrix[2][0] * r
-                + transform_matrix[2][1] * g
-                + transform_matrix[2][2] * b
+                blue_transform[0] * r
+                + blue_transform[1] * g
+                + blue_transform[2] * b
             )
             output_image[i][j] = (
                 min(new_r, 255),

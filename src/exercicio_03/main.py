@@ -7,7 +7,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
-from src.common.paths import results_dir_for, input_dir_for
+from src.common.paths import input_dir_for, results_dir_for
 from src.common.runner import run_exercise
 
 EXERCISE_NAME = "exercicio_03"
@@ -15,7 +15,10 @@ INPUTS = {
     "imagem": "https://www.ic.unicamp.br/~helio/imagens_png/watch.png",
 }
 
-def image_gaussian_blur(image: list[list[int]], kernel_size: int = 21) -> list[list[int]]:
+
+def image_gaussian_blur(
+    image: list[list[int]], kernel_size: int = 21
+) -> list[list[int]]:
     """
     Apply a Gaussian blur filter to a grayscale image using a square kernel.
 
@@ -84,7 +87,9 @@ def image_gaussian_blur(image: list[list[int]], kernel_size: int = 21) -> list[l
         for col in range(arr.shape[1]):
             # Extract the local neighborhood (region of interest) centered at
             # pixel (row, col) with the same shape as the kernel.
-            region = padded_image[row : row + kernel_size, col : col + kernel_size]
+            region = padded_image[
+                row : row + kernel_size, col : col + kernel_size
+            ]
             # Compute the weighted sum (dot product) between the neighborhood
             # and the normalized kernel — this is the convolution output.
             blurred_value = np.sum(region * kernel)
@@ -93,7 +98,9 @@ def image_gaussian_blur(image: list[list[int]], kernel_size: int = 21) -> list[l
     return blurred_image.tolist()
 
 
-def divide_images(image1: list[list[int]], image2: list[list[int]]) -> list[list[int]]:
+def divide_images(
+    image1: list[list[int]], image2: list[list[int]]
+) -> list[list[int]]:
     """
     Compute a pixel-wise division of two grayscale images to produce a sketch effect.
 
@@ -171,11 +178,12 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     img_sketch_effect = divide_images(img_grayscale, img_gaussian_blur)
 
     outputs = {
-        "whatch_grayscale.png": img_grayscale,
+        "watch_grayscale.png": img_grayscale,
         "watch_gaussian_blur.png": img_gaussian_blur,
         "watch_sketch_effect.png": img_sketch_effect,
     }
     return save_grayscale_outputs(output_dir, outputs)
+
 
 def report_files() -> dict[str, Path]:
     input_dir = input_dir_for(EXERCISE_NAME)
@@ -183,10 +191,11 @@ def report_files() -> dict[str, Path]:
 
     return {
         "watch.png": input_dir / "watch.png",
-        "whatch_grayscale.png": output_dir / "watch_grayscale.png",
+        "watch_grayscale.png": output_dir / "watch_grayscale.png",
         "watch_gaussian_blur.png": output_dir / "watch_gaussian_blur.png",
         "watch_sketch_effect.png": output_dir / "watch_sketch_effect.png",
     }
+
 
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
