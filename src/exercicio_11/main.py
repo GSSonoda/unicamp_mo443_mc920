@@ -29,14 +29,15 @@ def image_negative(image: list[list[int]]) -> list[list[int]]:
 def image_convert_interval(
     image: list[list[int]], new_min: int = 100, new_max: int = 200
 ) -> list[list[int]]:
-    old_min = min(min(row) for row in image)
-    old_max = max(max(row) for row in image)
+    """
+        Seja uma imagem de entrada com valores de n ́ıveis de cinza m ́ınimo e m ́aximo fmin efmax, respectivamente.Para mapear o intervalo de intensidade [fmin, fmax] dessa imagem em uma nova
+    imagem com intervalo [gmin, gmax], pode-se utilizar a transforma ̧c ̃aog = gmax − gminfmax − fmin(f − fmin) + gmin
+    """
+    fmin = min(min(row) for row in image)
+    fmax = max(max(row) for row in image)
     return [
         [
-            int(
-                ((pixel - old_min) / (old_max - old_min)) * (new_max - new_min)
-                + new_min
-            )
+            int((new_max - new_min) / (fmax - fmin) * (pixel - fmin) + new_min)
             for pixel in row
         ]
         for row in image
