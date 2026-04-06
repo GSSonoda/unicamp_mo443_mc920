@@ -4,16 +4,35 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.common.image_io import load_rgb_image, save_rgb_outputs
+from src.common.image_io import (
+    load_rgb_image,
+    save_grayscale_outputs,
+    save_rgb_outputs,
+)
 from src.common.runner import run_exercise
 
 EXERCISE_NAME = "exercicio_08"
 INPUTS = {
     "imagem": "https://www.ic.unicamp.br/~helio/imagens_png/watch.png",
 }
+
+"""
+(a) Dada uma imagemcolorida no formatoRGB, alterar a imagemconforme as seguintes
+operac¸˜oes:
+R’=0.393R+0.769G+0.189B
+G’=0.349R+0.686G+0.168B
+B’=0.272R+0.534G+0.131B
+"""
 RED_TRANSFORM = [0.393, 0.769, 0.189]
 GREEN_TRANSFORM = [0.349, 0.686, 0.168]
 BLUE_TRANSFORM = [0.272, 0.534, 0.131]
+
+"""
+(b) Dada uma imagem colorida no formato RGB, alterar a imagem tal que ela contenha apenas
+uma banda de cor, cujos valores s˜ ao calculados pela m´ edia ponderada:
+I = 0.2989R+0.5870G+0.1140B
+"""
+TRANSFORM_RGB = [0.2989, 0.5870, 0.1140]
 
 
 def image_color_transform(
@@ -49,14 +68,31 @@ def image_color_transform(
     return output_image
 
 
+def image_to_grayscale(
+    image: list[list[tuple[int, int, int]]],
+    weights: list[float] = TRANSFORM_RGB,
+) -> list[list[int]]:
+    return [
+        [
+            min(int(weights[0] * r + weights[1] * g + weights[2] * b), 255)
+            for r, g, b in row
+        ]
+        for row in image
+    ]
+
+
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     img = load_rgb_image(input_paths["imagem"])
     transformed_img = image_color_transform(img)
+    grayscale_img = image_to_grayscale(img)
 
-    outputs = {
-        "watch_transformed.png": transformed_img,
-    }
-    return save_rgb_outputs(output_dir, outputs)
+    saved = save_rgb_outputs(
+        output_dir, {"watch_transformed.png": transformed_img}
+    )
+    saved += save_grayscale_outputs(
+        output_dir, {"watch_grayscale.png": grayscale_img}
+    )
+    return saved
 
 
 def run(overwrite: bool = False) -> list[Path]:
