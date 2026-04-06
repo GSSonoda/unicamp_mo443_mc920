@@ -1,3 +1,12 @@
+"""
+1.6 Mosaic
+==========
+Construct a 4×4 block mosaic from a monochromatic image. The arrangement of
+the blocks follows the numbering defined in BLOCK_SORT: each position (i, j)
+in the output grid holds the block whose original 1-based index is
+BLOCK_SORT[i][j].
+"""
+
 import sys
 from pathlib import Path
 
@@ -21,8 +30,12 @@ def mosaic_4x4(
     block_sort: list[list[int]] = BLOCK_SORT,
 ) -> list[list[int]]:
     """
-    Construct a 4 × 4 block mosaic from a monochromatic image.
-    The arrangement of the blocks must follow the numbering shown in figure (c).
+    Rearrange image blocks into a 4×4 mosaic according to BLOCK_SORT.
+
+    Solution: divide the image into mosaic_shape[0] × mosaic_shape[1] equal
+    blocks. For each output position (i, j), look up BLOCK_SORT[i][j] to find
+    the 1-based source block index, convert it to (block_row, block_col), and
+    copy the corresponding pixel region into the output.
     """
     block_height = len(image) // mosaic_shape[0]
     block_width = len(image[0]) // mosaic_shape[1]

@@ -1,3 +1,11 @@
+"""
+1.12 Image Quantization
+=======================
+Quantization determines the number of gray levels used to represent a
+monochromatic image, and is tied to the bit depth of the image. Represent an
+image at different quantization levels: 256, 64, 32, 16, 8, 4, and 2.
+"""
+
 import sys
 from pathlib import Path
 
@@ -17,6 +25,14 @@ INPUTS = {
 
 
 def image_quantization(image: list[list[int]], factor: int) -> list[list[int]]:
+    """
+    Reduce the number of gray levels in a grayscale image.
+
+    Solution: divide the [0, 255] range into `factor` equal bins of width
+    step = 256 // factor. Each pixel is mapped to the lower boundary of its
+    bin: p' = (p // step) * step. This preserves the full [0, 255] output
+    range while reducing the number of distinct values to `factor`.
+    """
     if factor <= 0:
         raise ValueError(
             "O fator de quantização deve ser um inteiro positivo."

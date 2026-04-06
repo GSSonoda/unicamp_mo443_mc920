@@ -1,3 +1,14 @@
+"""
+1.5 Binary Thresholding
+=======================
+Given a monochromatic image A, generate a binary image B using a fixed
+threshold T:
+  B = 255  if A > T
+  B = 0    otherwise
+
+Test with threshold values: 50, 100, 150, 200.
+"""
+
 import sys
 from pathlib import Path
 

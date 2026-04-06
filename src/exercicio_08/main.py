@@ -1,3 +1,17 @@
+"""
+1.8 Transformation of Colored Images
+======================================
+(a) Given a color image in RGB format, apply the following linear transform:
+      R' = 0.393R + 0.769G + 0.189B
+      G' = 0.349R + 0.686G + 0.168B
+      B' = 0.272R + 0.534G + 0.131B
+    Values exceeding 255 are clipped to 255.
+
+(b) Given a color image in RGB format, convert it to a single-band
+    grayscale image using the weighted average:
+      I = 0.2989R + 0.5870G + 0.1140B
+"""
+
 import sys
 from pathlib import Path
 
@@ -16,22 +30,12 @@ INPUTS = {
     "imagem": "https://www.ic.unicamp.br/~helio/imagens_png/watch.png",
 }
 
-"""
-(a) Dada uma imagemcolorida no formatoRGB, alterar a imagemconforme as seguintes
-operac¸˜oes:
-R’=0.393R+0.769G+0.189B
-G’=0.349R+0.686G+0.168B
-B’=0.272R+0.534G+0.131B
-"""
+# (a) Per-channel weights for the sepia-like color transformation
 RED_TRANSFORM = [0.393, 0.769, 0.189]
 GREEN_TRANSFORM = [0.349, 0.686, 0.168]
 BLUE_TRANSFORM = [0.272, 0.534, 0.131]
 
-"""
-(b) Dada uma imagem colorida no formato RGB, alterar a imagem tal que ela contenha apenas
-uma banda de cor, cujos valores s˜ ao calculados pela m´ edia ponderada:
-I = 0.2989R+0.5870G+0.1140B
-"""
+# (b) Luminance weights for RGB-to-grayscale conversion (ITU-R BT.601)
 TRANSFORM_RGB = [0.2989, 0.5870, 0.1140]
 
 
@@ -41,6 +45,13 @@ def image_color_transform(
     green_transform: list[float] = GREEN_TRANSFORM,
     blue_transform: list[float] = BLUE_TRANSFORM,
 ) -> list[list[tuple[int, int, int]]]:
+    """
+    Apply a per-channel linear color transformation to an RGB image.
+
+    Solution: for each pixel (R, G, B), compute new channel values as the dot
+    product of each transform row with [R, G, B]. Results are cast to int and
+    clipped to 255. This produces a sepia-like warm tone shift.
+    """
     output_image = [[(0, 0, 0)] * len(image[0]) for _ in range(len(image))]
     for i in range(len(image)):
         for j in range(len(image[0])):
@@ -72,6 +83,14 @@ def image_to_grayscale(
     image: list[list[tuple[int, int, int]]],
     weights: list[float] = TRANSFORM_RGB,
 ) -> list[list[int]]:
+    """
+    Convert an RGB image to grayscale using a weighted average.
+
+    Solution: each pixel becomes I = w_R·R + w_G·G + w_B·B, where the
+    default weights (0.2989, 0.5870, 0.1140) follow the ITU-R BT.601
+    luma coefficients, which reflect human perceptual sensitivity to each
+    color channel. Result is clipped to [0, 255].
+    """
     return [
         [
             min(int(weights[0] * r + weights[1] * g + weights[2] * b), 255)

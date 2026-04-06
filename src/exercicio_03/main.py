@@ -1,3 +1,13 @@
+"""
+1.3 Pencil Sketch Effect
+========================
+Implement a pencil sketch effect through the following steps:
+  (i)   Convert the color image to grayscale.
+  (ii)  Apply a 21×21 Gaussian blur to smooth fine details.
+  (iii) Divide the grayscale image by the blurred version (dodge blend)
+        to enhance contours and produce a sketch-like appearance.
+"""
+
 import sys
 from pathlib import Path
 

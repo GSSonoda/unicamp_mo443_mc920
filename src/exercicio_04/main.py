@@ -1,3 +1,15 @@
+"""
+1.4 Brightness Adjustment via Gamma Correction
+===============================================
+Apply gamma correction to adjust the brightness of a monochromatic image A
+and produce a corrected output image B:
+  (i)   Normalize pixel intensities from [0, 255] to [0, 1].
+  (ii)  Apply B = A^(1/gamma).
+  (iii) Convert the result back to [0, 255].
+
+Test with gamma values: 0.25, 0.5, 1.0, 2.0, 4.0.
+"""
+
 import sys
 from pathlib import Path
 

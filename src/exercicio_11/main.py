@@ -1,3 +1,14 @@
+"""
+1.11 Intensity Transformation
+==============================
+Given a monochromatic image, transform its intensity space (gray levels):
+  (b) Obtain the negative: gray level 0 -> 255, level 1 -> 254, etc.
+  (c) Remap intensities to a new interval [new_min, new_max].
+  (d) Invert (horizontally flip) the pixels of every even-indexed row.
+  (e) Mirror the upper half of the image onto the lower half.
+  (f) Apply a vertical flip to the entire image.
+"""
+
 import sys
 from pathlib import Path
 
@@ -18,20 +29,23 @@ INPUTS = {
 
 def image_negative(image: list[list[int]]) -> list[list[int]]:
     """
-    # 1.11 Transformac¸˜ao de Intensidade
-    Dada (a) uma imagem monocrom´atica, transformar seu espac¸o de intensidades (n´ıveis de cinza)
-    para (b) obter o negativo da imagem, ou seja, o n´ıvel de cinza 0 ser´a convertido para 255, o n´ıvel
-    1 para 254 e assim por diante,
+    Compute the photographic negative of a grayscale image.
+
+    Solution: subtract each pixel value from 255 — p' = 255 - p.
+    This maps black (0) to white (255) and vice versa.
     """
     return [[255 - pixel for pixel in row] for row in image]
 
 
 def image_convert_interval(
-    image: list[list[int]], new_min: int = 100, new_max: int = 200
+    image: list[list[int]], new_min: int = 0, new_max: int = 100
 ) -> list[list[int]]:
     """
-        Seja uma imagem de entrada com valores de n ́ıveis de cinza m ́ınimo e m ́aximo fmin efmax, respectivamente.Para mapear o intervalo de intensidade [fmin, fmax] dessa imagem em uma nova
-    imagem com intervalo [gmin, gmax], pode-se utilizar a transforma ̧c ̃aog = gmax − gminfmax − fmin(f − fmin) + gmin
+    Linearly remap pixel intensities from [fmin, fmax] to [new_min, new_max].
+
+    Solution: standard linear interpolation
+      g = (new_max - new_min) / (fmax - fmin) * (f - fmin) + new_min
+    where fmin and fmax are the actual minimum and maximum of the image.
     """
     fmin = min(min(row) for row in image)
     fmax = max(max(row) for row in image)
@@ -46,26 +60,30 @@ def image_convert_interval(
 
 def image_invert_even_rows(image: list[list[int]]) -> list[list[int]]:
     """
-    (d) inverter os valores dos pixels das linhas pares da imagem, ou seja, os valores dos pixels da linha 0
-    ser˜ao posicionados da direita para esquerda, os valores dos pixels da linha 2 ser˜ao posicionados da
-    direita para a esquerda e assim por diante,
+    Horizontally flip every even-indexed row (rows 0, 2, 4, ...).
+
+    Solution: use Python slice reversal `row[::-1]` conditionally on the
+    row index parity. Odd rows are returned unchanged.
     """
     return [row[::-1] if i % 2 == 0 else row for i, row in enumerate(image)]
 
 
 def image_mirror_upper_half(image: list[list[int]]) -> list[list[int]]:
     """
-    (e) espelhar as linhas da metade superior da imagem na parte inferior da imagem
+    Replace the lower half of the image with a reversed copy of the upper half.
+
+    Solution: slice the first half, concatenate it with its reversed version.
+    The output has the same height as the input.
     """
-    height = len(image)
-    half_height = height // 2
+    half_height = len(image) // 2
     return image[:half_height] + image[:half_height][::-1]
 
 
 def image_mirror_vertical(image: list[list[int]]) -> list[list[int]]:
     """
-    (f) aplicar um espelhamento vertical na imagem levando-se em conta
-    todas as linhas da imagem
+    Flip the image vertically (reverse the row order).
+
+    Solution: reverse the outer list with `image[::-1]`.
     """
     return image[::-1]
 

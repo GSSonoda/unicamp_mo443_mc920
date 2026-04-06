@@ -1,3 +1,16 @@
+"""
+1.7 Color Alteration — Old Photograph Effect
+=============================================
+Simulate the look of old photographs by applying a linear color
+transformation to each pixel via the matrix:
+
+  R' = 0.393R + 0.769G + 0.189B
+  G' = 0.349R + 0.686G + 0.168B
+  B' = 0.272R + 0.534G + 0.131B
+
+After the transformation, pixel values are clipped to [0, 255].
+"""
+
 import sys
 from pathlib import Path
 
@@ -22,6 +35,14 @@ def image_color_transform(
     image: list[list[tuple[int, int, int]]],
     transform_matrix: list[list[float]] = TRANSFORMATION_MATRIX,
 ) -> list[list[tuple[int, int, int]]]:
+    """
+    Apply a 3×3 linear color transformation to an RGB image.
+
+    Solution: for each pixel (R, G, B), compute the new channels by taking
+    the dot product of the transformation matrix rows with [R, G, B]. Results
+    are cast to int and clipped to [0, 255] to handle values that exceed the
+    valid range.
+    """
     output_image = [[(0, 0, 0)] * len(image[0]) for _ in range(len(image))]
     for i in range(len(image)):
         for j in range(len(image[0])):

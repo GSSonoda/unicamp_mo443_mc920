@@ -1,3 +1,15 @@
+"""
+1.1 Image Rotation in Multiples of 90 Degrees
+==============================================
+Given a monochromatic image, implement rotation at the following angles:
+  (a) 90 degrees clockwise
+  (b) 180 degrees
+  (c) 270 degrees clockwise
+
+The rotation must be performed without library rotation functions — pixel
+indices must be remapped directly in the output matrix.
+"""
+
 from __future__ import annotations
 
 import sys
@@ -20,6 +32,12 @@ INPUTS = {
 
 
 def rotate_90_clockwise(image: list[list[int]]) -> list[list[int]]:
+    """
+    Rotate a grayscale image 90 degrees clockwise.
+
+    Solution: index remapping B[j][H-1-i] = A[i][j]. The output dimensions
+    are transposed (height becomes width and vice versa).
+    """
     height = len(image)
     width = len(image[0]) if height else 0
     rotated = [[0 for _ in range(height)] for _ in range(width)]
@@ -33,6 +51,12 @@ def rotate_90_clockwise(image: list[list[int]]) -> list[list[int]]:
 
 
 def rotate_180(image: list[list[int]]) -> list[list[int]]:
+    """
+    Rotate a grayscale image 180 degrees.
+
+    Solution: index remapping B[H-1-i][W-1-j] = A[i][j]. Equivalent to
+    reversing both the row order and the column order.
+    """
     height = len(image)
     width = len(image[0]) if height else 0
     rotated = [[0 for _ in range(width)] for _ in range(height)]
@@ -46,6 +70,12 @@ def rotate_180(image: list[list[int]]) -> list[list[int]]:
 
 
 def rotate_270_clockwise(image: list[list[int]]) -> list[list[int]]:
+    """
+    Rotate a grayscale image 270 degrees clockwise (90 degrees CCW).
+
+    Solution: index remapping B[W-1-j][i] = A[i][j]. The output dimensions
+    are transposed (height becomes width and vice versa).
+    """
     height = len(image)
     width = len(image[0]) if height else 0
     rotated = [[0 for _ in range(height)] for _ in range(width)]
@@ -59,14 +89,17 @@ def rotate_270_clockwise(image: list[list[int]]) -> list[list[int]]:
 
 
 def rotate_90_clockwise_alt(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 90 degrees clockwise using zip transpose and row reversal."""
     return [list(row) for row in zip(*image[::-1])]
 
 
 def rotate_180_alt(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 180 degrees by reversing all rows and each row's elements."""
     return [row[::-1] for row in image[::-1]]
 
 
 def rotate_270_clockwise_alt(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 270 degrees clockwise using zip transpose and column reversal."""
     return [list(row) for row in zip(*image)][::-1]
 
 

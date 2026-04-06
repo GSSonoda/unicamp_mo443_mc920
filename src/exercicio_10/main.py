@@ -1,3 +1,14 @@
+"""
+1.10 Image Combination
+======================
+Combine two monochromatic images of the same size via a weighted average of
+their gray levels:
+
+  output(i, j) = w1 * image1(i, j) + w2 * image2(i, j)
+
+Test with weight pairs: (0.5, 0.5), (0.7, 0.3), (0.3, 0.7).
+"""
+
 import sys
 from pathlib import Path
 
@@ -16,12 +27,6 @@ INPUTS = {
     "butterfly": "https://www.ic.unicamp.br/~helio/imagens_png/butterfly.png",
 }
 
-"""
-1.10 Combinac¸˜ao de Imagens
-Combinar duas imagens monocrom´aticas de mesmo tamanho por meio da m´edia ponderada de
-seus n´ıveis de cinza.
-"""
-
 
 def image_combination(
     image1: list[list[int]],
@@ -29,6 +34,13 @@ def image_combination(
     weight1: float = 0.5,
     weight2: float = 0.5,
 ) -> list[list[int]]:
+    """
+    Combine two same-size grayscale images by weighted average.
+
+    Solution: for each pixel position (i, j), compute
+    output = int(w1 * p1 + w2 * p2). When w1 + w2 = 1 the result stays
+    within [0, 255] without explicit clamping.
+    """
     output_image = [[0] * len(image1[0]) for _ in range(len(image1))]
     for i in range(len(image1)):
         for j in range(len(image1[0])):

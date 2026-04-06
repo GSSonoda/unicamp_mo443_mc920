@@ -1,3 +1,15 @@
+"""
+1.2 Image Amplification by Replication
+=======================================
+From a monochromatic image, generate an enlarged image using pixel
+replication:
+  (a) amplification by a factor of 2
+  (b) amplification by a factor of 4
+
+Each pixel of the original image is replicated to form an N×N block of
+identical pixels in the enlarged image.
+"""
+
 import sys
 from pathlib import Path
 
@@ -21,23 +33,46 @@ INPUTS = {
 }
 
 def image_upscaling_4x_vectorized(image: list[list[int]]) -> list[list[int]]:
+    """
+    Upscale a grayscale image by a factor of 4 using NumPy replication.
+
+    Solution: np.repeat applied twice — once along rows (axis=0) and once
+    along columns (axis=1) — replicates each pixel into a 4×4 block.
+    """
     arr = np.array(image, dtype=np.uint8)
     upscaled_axis0 = np.repeat(arr, 4, axis=0)
     upscaled = np.repeat(upscaled_axis0, 4, axis=1)
     return upscaled.tolist()
 
+
 def image_upscaling_2x(image: list[list[int]]) -> list[list[int]]:
+    """
+    Upscale a grayscale image by a factor of 2 using NumPy replication.
+
+    Solution: np.repeat applied twice — once along rows (axis=0) and once
+    along columns (axis=1) — replicates each pixel into a 2×2 block.
+    """
     arr = np.array(image, dtype=np.uint8)
     upscaled_axis0 = np.repeat(arr, 2, axis=0)
     upscaled = np.repeat(upscaled_axis0, 2, axis=1)
     return upscaled.tolist()
 
+
 def image_upscaling_2x_loop(image: list[list[int]]) -> list[list[int]]:
+    """
+    Upscale a grayscale image by a factor of 2 using explicit loops.
+
+    Solution: for each source pixel at (row, col), write its value to the
+    four corresponding positions in the output: (2r, 2c), (2r, 2c+1),
+    (2r+1, 2c), (2r+1, 2c+1).
+    """
     image_height = len(image)
     image_width = len(image[0]) if image_height else 0
     upscaled_height = image_height * 2
     upscaled_width = image_width * 2
-    image_output = [[0 for _ in range(upscaled_width)] for _ in range(upscaled_height)]
+    image_output = [
+        [0 for _ in range(upscaled_width)] for _ in range(upscaled_height)
+    ]
     for row in range(image_height):
         for col in range(image_width):
             pixel_value = image[row][col]
