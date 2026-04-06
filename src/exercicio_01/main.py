@@ -18,6 +18,8 @@ from pathlib import Path
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+import numpy as np
+
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
 from src.common.inputs import prepare_inputs
 from src.common.benchmark import benchmark_function, write_benchmark_results
@@ -101,6 +103,24 @@ def rotate_180_alt(image: list[list[int]]) -> list[list[int]]:
 def rotate_270_clockwise_alt(image: list[list[int]]) -> list[list[int]]:
     """Rotate 270 degrees clockwise using zip transpose and column reversal."""
     return [list(row) for row in zip(*image)][::-1]
+
+
+def rotate_90_clockwise_vectorized(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 90 degrees clockwise using numpy array slicing and transpose."""
+    return np.array(image)[:, ::-1].T.tolist()
+
+
+def rotate_180_vectorized(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 180 degrees using numpy array reversal on both axes."""
+    return np.array(image)[::-1, ::-1].tolist()
+
+
+def rotate_270_clockwise_vectorized(image: list[list[int]]) -> list[list[int]]:
+    """Rotate 270 degrees clockwise (90 CCW).
+
+    Uses numpy transpose followed by row reversal.
+    """
+    return np.array(image).T[::-1, :].tolist()
 
 
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:

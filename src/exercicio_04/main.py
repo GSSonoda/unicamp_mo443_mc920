@@ -18,7 +18,10 @@ import numpy as np
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
+from src.common.inputs import prepare_inputs
+from src.common.paths import input_dir_for, results_dir_for
 from src.common.runner import run_exercise
 
 EXERCISE_NAME = "exercicio_04"
@@ -115,8 +118,85 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     return save_grayscale_outputs(output_dir, outputs)
 
 
+def image_gamma_correction_vectorized(
+    image: list[list[int]], gamma: float
+) -> list[list[int]]:
+    """
+    Apply gamma correction using NumPy vectorized operations.
+
+    Identical mathematics to ``image_gamma_correction`` but operates on the
+    entire array at once instead of element-by-element, which is much faster.
+    """
+    arr = np.array(image, dtype=np.float32) / 255.0
+    corrected = np.power(arr, 1.0 / gamma)
+    return np.clip(corrected * 255.0, 0, 255).astype(np.uint8).tolist()
+
+
+def report_files() -> dict[str, Path]:
+    input_dir = input_dir_for(EXERCISE_NAME)
+    output_dir = results_dir_for(EXERCISE_NAME)
+
+    files: dict[str, Path] = {
+        "baboon_monocromatica.png": input_dir / "baboon_monocromatica.png",
+    }
+    for gamma in GAMMA_VALUES:
+        gamma_str = str(gamma).replace(".", "_")
+        filename = f"baboon_gamma_{gamma_str}.png"
+        files[filename] = output_dir / filename
+    return files
+
+
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
+
+def run_benchmarks(
+    repeats: int = 20,
+    warmup: int = 2,
+    overwrite_inputs: bool = False,
+) -> Path:
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
+    image = load_grayscale_image(input_paths["imagem"])
+    height = len(image)
+    width = len(image[0]) if height else 0
+    gamma = 2.0
+
+    benchmarks = {
+        "gamma_correction": {
+            "loop": benchmark_function(
+                image_gamma_correction,
+                image,
+                gamma,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "vetorizado": benchmark_function(
+                image_gamma_correction_vectorized,
+                image,
+                gamma,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+    }
+
+    output_path = write_benchmark_results(
+        EXERCISE_NAME,
+        "tempos_execucao.json",
+        {
+            "exercise": EXERCISE_NAME,
+            "image": {
+                "filename": input_paths["imagem"].name,
+                "width": width,
+                "height": height,
+            },
+            "benchmarks": benchmarks,
+        },
+    )
+    print(f"[ok] Benchmark salvo em: {output_path}")
+    return output_path
 
 
 if __name__ == "__main__":

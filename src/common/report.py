@@ -30,14 +30,34 @@ def copy_report_files(
 
 
 def sync_report_assets() -> None:
-    from src.exercicio_01.main import report_files as exercicio_01_report_files
-    from src.exercicio_02.main import report_files as exercicio_02_report_files
-    from src.exercicio_03.main import report_files as exercicio_03_report_files
+    from src.exercicio_01.main import report_files as ex01_report_files
+    from src.exercicio_02.main import report_files as ex02_report_files
+    from src.exercicio_03.main import report_files as ex03_report_files
+    from src.exercicio_04.main import report_files as ex04_report_files
+    from src.exercicio_05.main import report_files as ex05_report_files
+    from src.exercicio_06.main import report_files as ex06_report_files
+    from src.exercicio_07.main import report_files as ex07_report_files
+    from src.exercicio_08.main import report_files as ex08_report_files
+    from src.exercicio_09.main import report_files as ex09_report_files
+    from src.exercicio_10.main import report_files as ex10_report_files
+    from src.exercicio_11.main import report_files as ex11_report_files
+    from src.exercicio_12.main import report_files as ex12_report_files
+    from src.exercicio_13.main import report_files as ex13_report_files
 
     print("[info] Atualizando figuras do relatorio", flush=True)
-    copy_report_files("exercicio_01", exercicio_01_report_files())
-    copy_report_files("exercicio_02", exercicio_02_report_files())
-    copy_report_files("exercicio_03", exercicio_03_report_files())
+    copy_report_files("exercicio_01", ex01_report_files())
+    copy_report_files("exercicio_02", ex02_report_files())
+    copy_report_files("exercicio_03", ex03_report_files())
+    copy_report_files("exercicio_04", ex04_report_files())
+    copy_report_files("exercicio_05", ex05_report_files())
+    copy_report_files("exercicio_06", ex06_report_files())
+    copy_report_files("exercicio_07", ex07_report_files())
+    copy_report_files("exercicio_08", ex08_report_files())
+    copy_report_files("exercicio_09", ex09_report_files())
+    copy_report_files("exercicio_10", ex10_report_files())
+    copy_report_files("exercicio_11", ex11_report_files())
+    copy_report_files("exercicio_12", ex12_report_files())
+    copy_report_files("exercicio_13", ex13_report_files())
 
     print("[ok] Figuras do relatorio atualizadas", flush=True)
 

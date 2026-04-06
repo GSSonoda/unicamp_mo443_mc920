@@ -21,13 +21,18 @@ import math
 import sys
 from pathlib import Path
 
+import numpy as np
+
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import (
     load_grayscale_image,
     save_grayscale_outputs,
 )
+from src.common.inputs import prepare_inputs
+from src.common.paths import input_dir_for, results_dir_for
 from src.common.runner import run_exercise
 
 EXERCISE_NAME = "exercicio_13"
@@ -195,6 +200,53 @@ def apply_filter_magnitude(
     ]
 
 
+def apply_filter_vectorized(
+    image: list[list[int]], kernel: list[list[int]], scale: float = 1.0
+) -> list[list[int]]:
+    """
+    Apply a convolution filter using NumPy's ``np.pad`` and stride tricks.
+
+    Zero-pads the image, then uses a vectorized sliding-window sum via
+    ``np.lib.stride_tricks.sliding_window_view`` to replace the inner Python
+    loops.  Results are scaled, rounded, and clamped to [0, 255].
+    """
+    arr = np.array(image, dtype=np.float32)
+    k = np.array(kernel, dtype=np.float32) * scale
+    kh, kw = k.shape
+    ph, pw = kh // 2, kw // 2
+    padded = np.pad(arr, ((ph, ph), (pw, pw)), mode="constant")
+    windows = np.lib.stride_tricks.sliding_window_view(padded, (kh, kw))
+    result = np.einsum("ijkl,kl->ij", windows, k)
+    return np.clip(np.round(result), 0, 255).astype(np.uint8).tolist()
+
+
+def apply_filter_magnitude_vectorized(
+    image: list[list[int]],
+    kernel_a: list[list[int]],
+    kernel_b: list[list[int]],
+) -> list[list[int]]:
+    """
+    Compute gradient magnitude sqrt(A^2 + B^2) using vectorized convolutions.
+    """
+    arr = np.array(image, dtype=np.float32)
+    ka = np.array(kernel_a, dtype=np.float32)
+    kb = np.array(kernel_b, dtype=np.float32)
+
+    def _conv(img: np.ndarray, k: np.ndarray) -> np.ndarray:
+        kh, kw = k.shape
+        ph, pw = kh // 2, kw // 2
+        padded = np.pad(img, ((ph, ph), (pw, pw)), mode="constant")
+        windows = np.lib.stride_tricks.sliding_window_view(
+            padded, (kh, kw)
+        )
+        return np.einsum("ijkl,kl->ij", windows, k)
+
+    raw_a = _conv(arr, ka)
+    raw_b = _conv(arr, kb)
+    magnitude = np.sqrt(raw_a ** 2 + raw_b ** 2)
+    return np.clip(np.round(magnitude), 0, 255).astype(np.uint8).tolist()
+
+
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     img = load_grayscale_image(input_paths["imagem"])
     outputs = {
@@ -214,8 +266,97 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     return save_grayscale_outputs(output_dir, outputs)
 
 
+def report_files() -> dict[str, Path]:
+    input_dir = input_dir_for(EXERCISE_NAME)
+    output_dir = results_dir_for(EXERCISE_NAME)
+
+    return {
+        "baboon_monocromatica.png": input_dir / "baboon_monocromatica.png",
+        "h1.png": output_dir / "h1.png",
+        "h2.png": output_dir / "h2.png",
+        "h3.png": output_dir / "h3.png",
+        "h4.png": output_dir / "h4.png",
+        "h3_h4_combined.png": output_dir / "h3_h4_combined.png",
+        "h5.png": output_dir / "h5.png",
+        "h6.png": output_dir / "h6.png",
+        "h7.png": output_dir / "h7.png",
+        "h8.png": output_dir / "h8.png",
+        "h9.png": output_dir / "h9.png",
+        "h10.png": output_dir / "h10.png",
+        "h11.png": output_dir / "h11.png",
+    }
+
+
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
+
+def run_benchmarks(
+    repeats: int = 20,
+    warmup: int = 2,
+    overwrite_inputs: bool = False,
+) -> Path:
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
+    image = load_grayscale_image(input_paths["imagem"])
+    height = len(image)
+    width = len(image[0]) if height else 0
+
+    benchmarks = {
+        "apply_filter_h6": {
+            "loop": benchmark_function(
+                apply_filter,
+                image,
+                H6,
+                1 / 9,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "vetorizado": benchmark_function(
+                apply_filter_vectorized,
+                image,
+                H6,
+                1 / 9,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+        "apply_filter_magnitude_h3_h4": {
+            "loop": benchmark_function(
+                apply_filter_magnitude,
+                image,
+                H3,
+                H4,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "vetorizado": benchmark_function(
+                apply_filter_magnitude_vectorized,
+                image,
+                H3,
+                H4,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+    }
+
+    output_path = write_benchmark_results(
+        EXERCISE_NAME,
+        "tempos_execucao.json",
+        {
+            "exercise": EXERCISE_NAME,
+            "image": {
+                "filename": input_paths["imagem"].name,
+                "width": width,
+                "height": height,
+            },
+            "benchmarks": benchmarks,
+        },
+    )
+    print(f"[ok] Benchmark salvo em: {output_path}")
+    return output_path
 
 
 if __name__ == "__main__":

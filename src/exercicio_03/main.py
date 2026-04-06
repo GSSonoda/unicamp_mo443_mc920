@@ -16,7 +16,9 @@ import numpy as np
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
+from src.common.inputs import prepare_inputs
 from src.common.paths import input_dir_for, results_dir_for
 from src.common.runner import run_exercise
 
@@ -207,8 +209,89 @@ def report_files() -> dict[str, Path]:
     }
 
 
+def image_gaussian_blur_vectorized(
+    image: list[list[int]], kernel_size: int = 21
+) -> list[list[int]]:
+    """
+    Apply a Gaussian blur using NumPy's vectorized array operations.
+
+    Builds the same separable 1-D Gaussian kernel as the loop version, but
+    applies it with ``np.apply_along_axis`` and ``np.convolve`` instead of
+    explicit Python loops, which is significantly faster on large images.
+    """
+    arr = np.array(image, dtype=np.float32)
+    mean = kernel_size // 2
+    std_dev = kernel_size / 6
+    x = np.arange(kernel_size, dtype=np.float32)
+    kernel_1d = np.exp(-0.5 * ((x - mean) / std_dev) ** 2)
+    kernel_1d /= kernel_1d.sum()
+
+    # Separable convolution: convolve rows then columns
+    pad = kernel_size // 2
+    padded = np.pad(arr, pad, mode="edge")
+    # Convolve along rows
+    row_conv = np.apply_along_axis(
+        lambda row: np.convolve(row, kernel_1d, mode="valid"),
+        axis=1,
+        arr=padded,
+    )
+    # Convolve along columns
+    col_conv = np.apply_along_axis(
+        lambda col: np.convolve(col, kernel_1d, mode="valid"),
+        axis=0,
+        arr=row_conv,
+    )
+    return np.clip(col_conv, 0, 255).astype(np.uint8).tolist()
+
+
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
+
+def run_benchmarks(
+    repeats: int = 20,
+    warmup: int = 2,
+    overwrite_inputs: bool = False,
+) -> Path:
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
+    image = load_grayscale_image(input_paths["imagem"])
+    height = len(image)
+    width = len(image[0]) if height else 0
+
+    benchmarks = {
+        "gaussian_blur": {
+            "loop": benchmark_function(
+                image_gaussian_blur,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+            "vetorizado": benchmark_function(
+                image_gaussian_blur_vectorized,
+                image,
+                repeats=repeats,
+                warmup=warmup,
+            ),
+        },
+    }
+
+    output_path = write_benchmark_results(
+        EXERCISE_NAME,
+        "tempos_execucao.json",
+        {
+            "exercise": EXERCISE_NAME,
+            "image": {
+                "filename": input_paths["imagem"].name,
+                "width": width,
+                "height": height,
+            },
+            "benchmarks": benchmarks,
+        },
+    )
+    print(f"[ok] Benchmark salvo em: {output_path}")
+    return output_path
 
 
 if __name__ == "__main__":
