@@ -1,11 +1,3 @@
-"""
-1.12 Quantizac¸˜ao de Imagens
-Quantizac¸˜ao refere-se ao n´umero de n´ıveis de cinza usados para representar uma imagem mono-
-crom´atica. A quantizac¸˜ao est´a relacionada `a profundidade de uma imagem, a qual corresponde ao
-n´umero de bits necess´arios para armazenar a imagem. Representar uma imagem com diferentes
-n´ıveis de quantizac¸˜ao.
-"""
-
 import sys
 from pathlib import Path
 
@@ -24,9 +16,35 @@ INPUTS = {
 }
 
 
+def image_quantization(image: list[list[int]], factor: int) -> list[list[int]]:
+    if factor <= 0:
+        raise ValueError(
+            "O fator de quantização deve ser um inteiro positivo."
+        )
+    if factor > 256:
+        raise ValueError("O fator de quantização não pode ser maior que 256.")
+    step = 256 // factor
+    quantized_image = []
+    for row in image:
+        quantized_row = []
+        for pixel in row:
+            quantized_pixel = (pixel // step) * step
+            quantized_row.append(quantized_pixel)
+        quantized_image.append(quantized_row)
+    return quantized_image
+
+
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     img = load_grayscale_image(input_paths["imagem"])
-    outputs = {}
+    outputs = {
+        "quantizacao_256_niveis.png": image_quantization(img, 256),
+        "quantizacao_64_niveis.png": image_quantization(img, 64),
+        "quantizacao_32_niveis.png": image_quantization(img, 32),
+        "quantizacao_16_niveis.png": image_quantization(img, 16),
+        "quantizacao_8_niveis.png": image_quantization(img, 8),
+        "quantizacao_4_niveis.png": image_quantization(img, 4),
+        "quantizacao_2_niveis.png": image_quantization(img, 2),
+    }
     return save_grayscale_outputs(output_dir, outputs)
 
 
