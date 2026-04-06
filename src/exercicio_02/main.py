@@ -15,22 +15,21 @@ from pathlib import Path
 
 import numpy as np
 
-from src.common.paths import results_dir_for, input_dir_for
+from src.common.paths import input_dir_for, results_dir_for
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs
 from src.common.inputs import prepare_inputs
-from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.runner import run_exercise
-
-
 
 EXERCISE_NAME = "exercicio_02"
 INPUTS = {
     "imagem": "https://www.ic.unicamp.br/~helio/imagens_png/baboon_monocromatica.png",
 }
+
 
 def image_upscaling_4x_vectorized(image: list[list[int]]) -> list[list[int]]:
     """
@@ -82,6 +81,7 @@ def image_upscaling_2x_loop(image: list[list[int]]) -> list[list[int]]:
             image_output[row * 2 + 1][col * 2 + 1] = pixel_value
     return image_output
 
+
 def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     image = load_grayscale_image(input_paths["imagem"])
 
@@ -91,8 +91,10 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     }
     return save_grayscale_outputs(output_dir, outputs)
 
+
 def run(overwrite: bool = False) -> list[Path]:
     return run_exercise(EXERCISE_NAME, INPUTS, process, overwrite=overwrite)
+
 
 def report_files() -> dict[str, Path]:
     input_dir = input_dir_for(EXERCISE_NAME)
@@ -100,16 +102,19 @@ def report_files() -> dict[str, Path]:
 
     return {
         "baboon_1x.png": input_dir / "baboon_monocromatica.png",
-        "baboon_2x.png": output_dir / "imagem_2x.png",
-        "baboon_4x.png": output_dir / "imagem_4x.png",
+        "baboon_2x.png": output_dir / "baboon_2x.png",
+        "baboon_4x.png": output_dir / "baboon_4x.png",
     }
+
 
 def run_benchmarks(
     repeats: int = 20,
     warmup: int = 2,
     overwrite_inputs: bool = False,
 ) -> Path:
-    input_paths = prepare_inputs(EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs)
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
     image = load_grayscale_image(input_paths["imagem"])
     height = len(image)
     width = len(image[0]) if height else 0
