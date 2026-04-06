@@ -13,6 +13,8 @@ from src.exercicio_08.main import run as run_exercicio_08
 from src.exercicio_09.main import run as run_exercicio_09
 from src.exercicio_10.main import run as run_exercicio_10
 from src.exercicio_11.main import run as run_exercicio_11
+from src.exercicio_12.main import run as run_exercicio_12
+from src.exercicio_13.main import run as run_exercicio_13
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,6 +45,8 @@ def main() -> int:
         run_exercicio_09(overwrite=args.overwrite)
         run_exercicio_10(overwrite=args.overwrite)
         run_exercicio_11(overwrite=args.overwrite)
+        run_exercicio_12(overwrite=args.overwrite)
+        run_exercicio_13(overwrite=args.overwrite)
         print("[ok] Execucao concluida")
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
