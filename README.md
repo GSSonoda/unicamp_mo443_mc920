@@ -1,100 +1,81 @@
-# Trabalho 1 - MC920 / MO443
+# MC920 / MO443 — Introdução ao Processamento Digital de Imagens
 
-Este repositório contém o Trabalho 1 de Introdução ao Processamento Digital de Imagens.
-
-O projeto foi organizado para suportar vários exercícios com a mesma estrutura de código, entradas, saídas e relatório.
+Este repositório contém os Trabalhos 1 e 2 da disciplina.
 
 ## 1. Montar o ambiente
-
-Use os comandos abaixo na raiz do repositório:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-Se você já tiver um ambiente virtual ativo, basta instalar o `requirements.txt`.
+## 2. Executar exercícios / métodos
 
-## 2. Executar os exercícios
-
-Para executar um exercício específico:
+Executar um item específico:
 
 ```bash
-python main.py NUMERO_DO_EXERCICIO
+# Trabalho 1 — exercícios 1 a 13 (padrão)
+python main.py NUMERO
+
+# Trabalho 2 — métodos 1 a 12
+python main.py NUMERO --trabalho 2
 ```
 
-Para executar tudo que já está implementado no repositório:
+Executar tudo que está implementado:
 
 ```bash
-python run_all.py
+python run_all.py               # ambos os trabalhos
+python run_all.py --trabalho 1  # só o trabalho 1
+python run_all.py --trabalho 2  # só o trabalho 2
 ```
 
-Se quiser refazer os arquivos gerados, use:
+Para refazer arquivos já gerados, adicione `--overwrite`.
+
+## 3. Benchmarks
 
 ```bash
-python main.py NUMERO_DO_EXERCICIO --overwrite
+# Trabalho 1
+python benchmark.py NUMERO --repeats 30 --warmup 3
+
+# Trabalho 2
+python benchmark.py NUMERO --trabalho 2 --repeats 30 --warmup 3
 ```
 
-## 3. Medir tempos de execução
+Os resultados são salvos em `results/benchmarks/`.
 
-Para gerar um benchmark em JSON de um exercício:
+## 4. Relatório
+
+Gerar o PDF:
 
 ```bash
-python benchmark.py NUMERO_DO_EXERCICIO
+python build_report.py --report 1   # trabalho 1 (padrão)
+python build_report.py --report 2   # trabalho 2
 ```
 
-Exemplo para o exercício 1:
+Atualizar as figuras a partir dos resultados locais antes de compilar:
 
 ```bash
-python benchmark.py 1 --repeats 30 --warmup 3
+python build_report.py --report 2 --sync-figures
 ```
 
-Os benchmarks são salvos localmente em:
+Requer LaTeX com `latexmk` instalado.
 
-- `results/benchmarks/exercicio_XX/tempos_execucao.json`
+## 5. Estrutura de pastas
 
-Esse arquivo pode ser usado depois para montar tabelas ou comparações no relatório.
+```
+src/
+├── common/           # utilitários compartilhados
+├── trabalho_01/      # exercicio_01 … exercicio_13
+└── trabalho_02/      # metodo_01_global … metodo_12_histogramas
 
-## 4. Onde estão os arquivos
+docs/
+├── relatorio/        # relatório do trabalho 1 (LaTeX + PDF)
+└── relatorio_02/     # relatório do trabalho 2 (LaTeX + PDF)
 
-- Entradas locais de cada exercício: `data/input/exercicio_XX/`
-- Resultados locais de cada exercício: `results/exercicio_XX/`
-- Benchmarks locais de cada exercício: `results/benchmarks/exercicio_XX/`
-- Figuras usadas no relatório: `docs/relatorio/figuras/exercicio_XX/`
-- Relatório pronto em PDF: `docs/relatorio/relatorio.pdf`
-- Fonte do relatório em LaTeX: `docs/relatorio/relatorio.tex`
-
-As pastas `data/input/` e `results/` são geradas localmente durante a execução e não ficam versionadas no Git.
-
-As figuras copiadas para `docs/relatorio/figuras/` são mantidas no repositório porque fazem parte do material usado pelo LaTeX.
-
-As figuras do relatório só são atualizadas quando você executa `python build_report.py`. Rodar os exercícios isoladamente não altera `docs/relatorio/figuras/`.
-
-## 5. Relatório
-
-O PDF já está pronto em:
-
-```text
-docs/relatorio/relatorio.pdf
+data/input/           # entradas baixadas na execução (não versionadas)
+results/              # saídas geradas na execução (não versionadas)
 ```
 
-Se quiser apenas consultar o trabalho, esse é o arquivo principal.
-
-## 6. Gerar o relatório novamente (opcional)
-
-Se quiser atualizar o PDF a partir do LaTeX:
-
-```bash
-python build_report.py
-```
-
-Esse passo é opcional. Ele só é necessário se você alterar `docs/relatorio/relatorio.tex`.
-
-Se também quiser atualizar as figuras do relatório a partir dos resultados locais mais recentes, use:
-
-```bash
-python build_report.py --sync-figures
-```
-
-Para esse comando funcionar, o sistema precisa ter LaTeX com `latexmk` instalado.
+As figuras em `docs/relatorio*/figuras/` são versionadas porque o LaTeX depende delas.
+Rodar os exercícios isoladamente **não** atualiza as figuras do relatório; use `--sync-figures` para isso.

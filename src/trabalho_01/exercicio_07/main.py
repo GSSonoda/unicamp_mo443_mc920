@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import load_rgb_image, save_rgb_outputs

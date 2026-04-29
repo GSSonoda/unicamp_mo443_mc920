@@ -18,7 +18,7 @@ import numpy as np
 from src.common.paths import input_dir_for, results_dir_for
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from src.common.benchmark import benchmark_function, write_benchmark_results
 from src.common.image_io import load_grayscale_image, save_grayscale_outputs

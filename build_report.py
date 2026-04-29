@@ -12,7 +12,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--sync-figures",
         action="store_true",
-        help="Atualiza as figuras do relatorio a partir dos arquivos locais antes de compilar o PDF.",
+        help=(
+            "Atualiza as figuras do relatorio a partir dos arquivos "
+            "locais antes de compilar o PDF."
+        ),
     )
     parser.add_argument(
         "--report",

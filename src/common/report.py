@@ -4,7 +4,12 @@ from pathlib import Path
 from shutil import copy2
 from subprocess import CalledProcessError, run
 
-from src.common.paths import REPORT_DIR, REPORT_02_DIR, report_figures_dir_for, report_02_figures_dir_for
+from src.common.paths import (
+    REPORT_02_DIR,
+    REPORT_DIR,
+    report_02_figures_dir_for,
+    report_figures_dir_for,
+)
 
 
 def copy_report_files_02(
@@ -52,19 +57,45 @@ def copy_report_files(
 
 
 def _sync_report_assets_01() -> None:
-    from src.exercicio_01.main import report_files as ex01_report_files
-    from src.exercicio_02.main import report_files as ex02_report_files
-    from src.exercicio_03.main import report_files as ex03_report_files
-    from src.exercicio_04.main import report_files as ex04_report_files
-    from src.exercicio_05.main import report_files as ex05_report_files
-    from src.exercicio_06.main import report_files as ex06_report_files
-    from src.exercicio_07.main import report_files as ex07_report_files
-    from src.exercicio_08.main import report_files as ex08_report_files
-    from src.exercicio_09.main import report_files as ex09_report_files
-    from src.exercicio_10.main import report_files as ex10_report_files
-    from src.exercicio_11.main import report_files as ex11_report_files
-    from src.exercicio_12.main import report_files as ex12_report_files
-    from src.exercicio_13.main import report_files as ex13_report_files
+    from src.trabalho_01.exercicio_01.main import (
+        report_files as ex01_report_files,
+    )
+    from src.trabalho_01.exercicio_02.main import (
+        report_files as ex02_report_files,
+    )
+    from src.trabalho_01.exercicio_03.main import (
+        report_files as ex03_report_files,
+    )
+    from src.trabalho_01.exercicio_04.main import (
+        report_files as ex04_report_files,
+    )
+    from src.trabalho_01.exercicio_05.main import (
+        report_files as ex05_report_files,
+    )
+    from src.trabalho_01.exercicio_06.main import (
+        report_files as ex06_report_files,
+    )
+    from src.trabalho_01.exercicio_07.main import (
+        report_files as ex07_report_files,
+    )
+    from src.trabalho_01.exercicio_08.main import (
+        report_files as ex08_report_files,
+    )
+    from src.trabalho_01.exercicio_09.main import (
+        report_files as ex09_report_files,
+    )
+    from src.trabalho_01.exercicio_10.main import (
+        report_files as ex10_report_files,
+    )
+    from src.trabalho_01.exercicio_11.main import (
+        report_files as ex11_report_files,
+    )
+    from src.trabalho_01.exercicio_12.main import (
+        report_files as ex12_report_files,
+    )
+    from src.trabalho_01.exercicio_13.main import (
+        report_files as ex13_report_files,
+    )
 
     print("[info] Atualizando figuras do relatorio 1", flush=True)
     copy_report_files("exercicio_01", ex01_report_files())
@@ -85,32 +116,56 @@ def _sync_report_assets_01() -> None:
 
 
 def sync_report_assets_02() -> None:
-    from src.trabalho_02.metodo_01_global.main import report_files as m01_report_files
-    from src.trabalho_02.metodo_02_otsu.main import report_files as m02_report_files
-    from src.trabalho_02.metodo_03_bernsen.main import report_files as m03_report_files
-    from src.trabalho_02.metodo_04_niblack.main import report_files as m04_report_files
-    from src.trabalho_02.metodo_05_sauvola.main import report_files as m05_report_files
-    from src.trabalho_02.metodo_06_phansalskar.main import report_files as m06_report_files
-    from src.trabalho_02.metodo_07_contraste.main import report_files as m07_report_files
-    from src.trabalho_02.metodo_08_media.main import report_files as m08_report_files
-    from src.trabalho_02.metodo_09_mediana.main import report_files as m09_report_files
-    from src.trabalho_02.metodo_10_pixels.main import report_files as m10_report_files
-    from src.trabalho_02.metodo_11_blocos.main import report_files as m11_report_files
-    from src.trabalho_02.metodo_12_histogramas.main import report_files as m12_report_files
+    from src.trabalho_02.metodo_01_global.main import (
+        report_files as m01_report_files,
+    )
+    from src.trabalho_02.metodo_02_otsu.main import (
+        report_files as m02_report_files,
+    )
+    from src.trabalho_02.metodo_03_bernsen.main import (
+        report_files as m03_report_files,
+    )
+    from src.trabalho_02.metodo_04_niblack.main import (
+        report_files as m04_report_files,
+    )
+    from src.trabalho_02.metodo_05_sauvola.main import (
+        report_files as m05_report_files,
+    )
+    from src.trabalho_02.metodo_06_phansalskar.main import (
+        report_files as m06_report_files,
+    )
+    from src.trabalho_02.metodo_07_contraste.main import (
+        report_files as m07_report_files,
+    )
+    from src.trabalho_02.metodo_08_media.main import (
+        report_files as m08_report_files,
+    )
+    from src.trabalho_02.metodo_09_mediana.main import (
+        report_files as m09_report_files,
+    )
+    from src.trabalho_02.metodo_10_pixels.main import (
+        report_files as m10_report_files,
+    )
+    from src.trabalho_02.metodo_11_blocos.main import (
+        report_files as m11_report_files,
+    )
+    from src.trabalho_02.metodo_12_histogramas.main import (
+        report_files as m12_report_files,
+    )
 
     print("[info] Atualizando figuras do relatorio 2", flush=True)
-    copy_report_files_02("secao_01", m01_report_files())
-    copy_report_files_02("secao_01", m02_report_files())
-    copy_report_files_02("secao_01", m03_report_files())
-    copy_report_files_02("secao_01", m04_report_files())
-    copy_report_files_02("secao_01", m05_report_files())
-    copy_report_files_02("secao_01", m06_report_files())
-    copy_report_files_02("secao_01", m07_report_files())
-    copy_report_files_02("secao_01", m08_report_files())
-    copy_report_files_02("secao_01", m09_report_files())
-    copy_report_files_02("secao_02", m10_report_files())
-    copy_report_files_02("secao_02", m11_report_files())
-    copy_report_files_02("secao_02", m12_report_files())
+    copy_report_files_02("metodo_01_global", m01_report_files())
+    copy_report_files_02("metodo_02_otsu", m02_report_files())
+    copy_report_files_02("metodo_03_bernsen", m03_report_files())
+    copy_report_files_02("metodo_04_niblack", m04_report_files())
+    copy_report_files_02("metodo_05_sauvola", m05_report_files())
+    copy_report_files_02("metodo_06_phansalskar", m06_report_files())
+    copy_report_files_02("metodo_07_contraste", m07_report_files())
+    copy_report_files_02("metodo_08_media", m08_report_files())
+    copy_report_files_02("metodo_09_mediana", m09_report_files())
+    copy_report_files_02("metodo_10_pixels", m10_report_files())
+    copy_report_files_02("metodo_11_blocos", m11_report_files())
+    copy_report_files_02("metodo_12_histogramas", m12_report_files())
     print("[ok] Figuras do relatorio 2 atualizadas", flush=True)
 
 

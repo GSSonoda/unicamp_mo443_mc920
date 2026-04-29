@@ -39,14 +39,5 @@ def report_figures_dir_for(exercise: int | str) -> Path:
     return REPORT_FIGURES_DIR / normalize_exercise(exercise)
 
 
-def normalize_section(section: int | str) -> str:
-    text = str(section)
-    if text.isdigit():
-        return f"secao_{int(text):02d}"
-    if text.startswith("secao_"):
-        return text
-    raise ValueError(f"Nome de secao invalido: {section}")
-
-
-def report_02_figures_dir_for(section: int | str) -> Path:
-    return REPORT_02_FIGURES_DIR / normalize_section(section)
+def report_02_figures_dir_for(method: str) -> Path:
+    return REPORT_02_FIGURES_DIR / method
