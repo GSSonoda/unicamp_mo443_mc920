@@ -14,6 +14,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Atualiza as figuras do relatorio a partir dos arquivos locais antes de compilar o PDF.",
     )
+    parser.add_argument(
+        "--report",
+        type=int,
+        choices=[1, 2],
+        default=1,
+        metavar="{1,2}",
+        help="Número do trabalho cujo relatório deve ser gerado (padrão: 1).",
+    )
     return parser.parse_args()
 
 
@@ -21,10 +29,10 @@ def main() -> int:
     args = parse_args()
 
     try:
-        print("[info] Gerando o PDF do relatorio", flush=True)
+        print(f"[info] Gerando o PDF do relatorio {args.report}", flush=True)
         if args.sync_figures:
-            sync_report_assets()
-        build_report()
+            sync_report_assets(args.report)
+        build_report(args.report)
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"[erro] {exc}")

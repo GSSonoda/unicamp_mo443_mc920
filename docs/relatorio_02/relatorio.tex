@@ -1,0 +1,601 @@
+% !TeX root = relatorio.tex
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazilian]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  pdftitle={Relatorio do Trabalho 2},
+  pdfauthor={Gustavo Shoiti Sonoda}
+}
+\urlstyle{tt}
+
+\renewcommand{\contentsname}{Sumário}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.7em}
+\linespread{1.05}
+
+\newcommand{\arquivo}[1]{\nolinkurl{#1}}
+\newcommand{\campo}[2]{\textbf{#1.} #2\par}
+\newcommand{\figdir}[1]{figuras/#1}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\pagenumbering{gobble}
+
+\begin{titlepage}
+  \centering
+
+  \includegraphics[width=0.24\textwidth]{figuras/logo_ic.png}\par
+  \vspace{0.8cm}
+  {\large Universidade Estadual de Campinas\par}
+  {\large Instituto de Computação\par}
+
+  \vspace{1.5cm}
+
+  {\Large \textbf{Relatório de Implementação do Trabalho 2}\par}
+  \vspace{0.5cm}
+  {\large Introdução ao Processamento Digital de Imagens (MC920/MO443)\par}
+  \vspace{1.2cm}
+
+  {\large Relatório de implementação desenvolvido para a disciplina\\
+    Introdução ao Processamento Digital de Imagens.\par}
+
+  \vspace{1.5cm}
+
+  \begin{flushleft}
+    \textbf{Professor:} Hélio Pedrini\\
+    \textbf{Aluno:} Gustavo Shoiti Sonoda\\
+    \textbf{RA:} 217579\\
+  \end{flushleft}
+
+  \vfill
+
+  Campinas -- São Paulo\\
+  \today
+\end{titlepage}
+
+\tableofcontents
+\newpage
+\hypersetup{pageanchor=true}
+\pagenumbering{arabic}
+
+% ---------------------------------------------------------------------------
+\section{Introdução}
+% ---------------------------------------------------------------------------
+
+O Trabalho 2 da disciplina MC920/MO443 propõe a implementação e análise de dois grupos de
+técnicas de processamento digital de imagens e vídeo: métodos de segmentação por
+limiarização (global e local) e métodos de detecção de transições abruptas em vídeos.
+A vetorização de comandos deve ser empregada quando pertinente.
+
+A Seção~\ref{sec:limiarizacao} descreve os nove métodos de binarização: limiar global fixo,
+Otsu, Bernsen, Niblack, Sauvola e Pietaksinen, Phansalskar et al., Contraste, Média e
+Mediana. As entradas são imagens monocromáticas no formato PGM; as saídas são imagens
+binárias em PNG. A Seção~\ref{sec:video} apresenta os três detectores de transições em
+vídeo baseados em diferenças entre pixels, blocos e histogramas.
+
+% ---------------------------------------------------------------------------
+\section{Materiais e Métodos}
+% ---------------------------------------------------------------------------
+
+\subsection{Ambiente e organização}
+
+\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python~3. O projeto
+utiliza \textit{Pillow} para leitura e gravação de imagens PGM/PNG e \textit{NumPy} nas
+operações vetorizadas. Filtros deslizantes são obtidos via \textit{SciPy}
+(\texttt{scipy.ndimage}). A leitura e escrita de vídeos MP4 é feita com \textit{OpenCV}
+(\texttt{cv2}). A infraestrutura comum de preparação de entradas e geração de saídas é
+centralizada em \arquivo{src/common/}.}
+
+\campo{Organização dos arquivos}{As entradas de imagens ficam em
+\arquivo{data/input/trabalho\_02/imagens/}, os vídeos em
+\arquivo{data/input/trabalho\_02/videos/}, os resultados em
+\arquivo{results/trabalho\_02/}, os benchmarks em
+\arquivo{results/benchmarks/trabalho\_02/} e as figuras do relatório em
+\arquivo{docs/relatorio\_02/figuras/}, com subpastas
+\arquivo{secao\_01/} (limiarização) e \arquivo{secao\_02/} (vídeo).}
+
+\campo{Representação das imagens}{Imagens monocromáticas foram tratadas como matrizes
+bidimensionais de inteiros em $[0,255]$. As saídas binárias seguem a convenção do enunciado:
+pixel com valor maior que o limiar é classificado como objeto (preto, valor~0); os demais
+são rotulados como fundo (branco, valor~255).}
+
+\subsection{Benchmarks e integração com o relatório}
+
+\campo{Medição de desempenho}{Os tempos foram coletados para cada método de limiarização e
+para cada detector de transições, usando múltiplas repetições com execuções de aquecimento.
+Em cada método foi comparada a implementação principal com uma alternativa vetorizada em
+\textit{NumPy} ou \textit{SciPy}, quando aplicável.}
+
+\campo{Figuras do relatório}{As imagens mostradas ao longo do texto foram copiadas de
+\arquivo{results/trabalho\_02/} para \arquivo{docs/relatorio\_02/figuras/} pelas rotinas
+\texttt{report\_files()} de cada módulo e pelo script \arquivo{build\_report.py}, garantindo
+sincronização entre os resultados gerados e o PDF compilado.}
+
+\campo{Critério de análise}{A avaliação combinou inspeção visual das imagens binarizadas,
+conferência da fração de pixels pretos (incluindo histogramas) e análise dos tempos médios
+obtidos pelos benchmarks. Para a detecção de transições, a avaliação verificou os quadros
+marcados como cortes abruptos contra a linha do tempo esperada do vídeo.}
+
+% ---------------------------------------------------------------------------
+\section{Métodos de Limiarização Global e Local}
+\label{sec:limiarizacao}
+% ---------------------------------------------------------------------------
+
+O objetivo desta parte é implementar e analisar métodos de limiarização global e local em
+imagens monocromáticas. Métodos globais determinam um único valor de limiar para toda a
+imagem; métodos adaptativos locais calculam um limiar individual para cada pixel com base
+na informação contida em uma vizinhança. Em ambos os casos, se o valor de $p(x,y)$ for maior
+que o limiar, o pixel é classificado como objeto (preto); caso contrário, é rotulado como
+fundo (branco). Para cada método são apresentados o histograma da imagem binarizada e a
+fração de pixels pretos.
+
+% ---------- 1.1 Global ------------------------------------------------------
+\subsection{Método Global}
+
+\campo{Enunciado}{Se o valor de intensidade de um pixel $(x,y)$ for maior do que um limiar
+$T$ (por exemplo, $T=128$), o pixel será considerado como pertencente ao objeto; caso
+contrário, será considerado como fundo.}
+
+\campo{Abordagem escolhida}{A binarização foi aplicada com \texttt{np.where}: pixels com
+valor $> T$ recebem 0 (objeto/preto); os demais recebem 255 (fundo/branco). O limiar fixo
+utilizado foi $T = 128$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/global_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/global_binaria.png}
+%     \caption{Resultado -- Método Global ($T=128$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.2 Otsu --------------------------------------------------------
+\subsection{Método de Otsu \cite{otsu1979}}
+
+\campo{Enunciado}{Calcula automaticamente um limiar ótimo para dividir a imagem em duas
+classes de pixels por meio da minimização da variância intraclasse.}
+
+\campo{Abordagem escolhida}{O histograma normalizado da imagem foi calculado e, para cada
+valor candidato de limiar $t \in [0,254]$, foram estimadas as probabilidades e médias das
+duas classes. O limiar escolhido é o que maximiza a variância interclasse
+$\sigma_B^2(t) = \omega_0(t)\,\omega_1(t)\,[\mu_0(t)-\mu_1(t)]^2$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/otsu_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/otsu_binaria.png}
+%     \caption{Resultado -- Método de Otsu}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.3 Bernsen -----------------------------------------------------
+\subsection{Método de Bernsen \cite{bernsen1986}}
+
+\campo{Enunciado}{Para cada pixel $(x,y)$, o limiar é calculado como
+\begin{equation}
+  T(x,y) = \frac{z_{\min} + z_{\max}}{2}
+\end{equation}
+em que $z_{\min}$ e $z_{\max}$ são os valores de níveis de cinza mínimo e máximo,
+respectivamente, em uma vizinhança $n \times n$ centrada em $(x,y)$.}
+
+\campo{Abordagem escolhida}{A imagem foi percorrida com extração da vizinhança $n \times n$
+para cada pixel. Os valores mínimo e máximo locais foram obtidos com \texttt{np.min} e
+\texttt{np.max} sobre a janela recortada. A versão vetorizada utiliza
+\texttt{scipy.ndimage.minimum\_filter} e \texttt{maximum\_filter}. Vizinhança utilizada:
+$n = 15$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/bernsen_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/bernsen_binaria.png}
+%     \caption{Resultado -- Método de Bernsen ($n=15$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.4 Niblack -----------------------------------------------------
+\subsection{Método de Niblack \cite{niblack1986}}
+
+\campo{Enunciado}{O valor de limiar em um pixel $(x,y)$ é calculado como
+\begin{equation}
+  T(x,y) = \mu(x,y) + k\,\sigma(x,y)
+\end{equation}
+em que $\mu(x,y)$ e $\sigma(x,y)$ são a média e o desvio padrão, respectivamente, em uma
+vizinhança local de $(x,y)$. O tamanho da vizinhança deve ser suficientemente pequeno para
+preservar detalhes locais, mas suficientemente grande para suprimir ruído. O valor de $k$
+ajusta a fração da borda do objeto a ser considerada como parte do objeto.}
+
+\campo{Abordagem escolhida}{Média e desvio padrão locais foram calculados com filtros
+deslizantes sobre a imagem: a média com \texttt{scipy.ndimage.uniform\_filter} e a variância
+por $\sigma^2 = E[X^2] - E[X]^2$, obtendo-se $\sigma$ pela raiz quadrada. Parâmetros
+utilizados: $n = 15$, $k = -0{,}2$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/niblack_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/niblack_binaria.png}
+%     \caption{Resultado -- Método de Niblack ($n=15$, $k=-0{,}2$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.5 Sauvola -----------------------------------------------------
+\subsection{Método de Sauvola e Pietaksinen \cite{sauvola2000}}
+
+\campo{Enunciado}{Procura melhorar os resultados do método de Niblack, particularmente para
+imagens de documentos com má iluminação. O limiar em um pixel $(x,y)$ é calculado como
+\begin{equation}
+  T(x,y) = \mu(x,y) \left[1 + k \left(\frac{\sigma(x,y)}{R} - 1\right)\right]
+\end{equation}
+em que $\mu(x,y)$ e $\sigma(x,y)$ são definidos como em \cite{niblack1986}. Os autores
+sugerem $k = 0{,}5$ e $R = 128$.}
+
+\campo{Abordagem escolhida}{Reutiliza os filtros deslizantes de média e desvio padrão do
+método de Niblack, substituindo apenas a expressão do limiar. Parâmetros utilizados:
+$n = 15$, $k = 0{,}5$, $R = 128$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/sauvola_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/sauvola_binaria.png}
+%     \caption{Resultado -- Método de Sauvola ($n=15$, $k=0{,}5$, $R=128$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.6 Phansalskar -------------------------------------------------
+\subsection{Método de Phansalskar, More e Sabale \cite{phansalskar2011}}
+
+\campo{Enunciado}{Variação do método de Sauvola para lidar com imagens de baixo contraste.
+O limiar é calculado como
+\begin{equation}
+  T = \mu(x,y) \left[1 + p\,\exp(-q\,\mu(x,y)) + k \left(\frac{\sigma(x,y)}{R} - 1\right)\right]
+\end{equation}
+em que $\mu(x,y)$ e $\sigma(x,y)$ são a média e o desvio padrão em uma vizinhança local de
+$(x,y)$. Os autores sugerem $k = 0{,}25$, $R = 0{,}5$, $p = 2$ e $q = 10$. O valor de $R$
+é diferente do método de Sauvola pois usa intensidade normalizada da imagem.}
+
+\campo{Abordagem escolhida}{A imagem foi normalizada para $[0,1]$ antes do cálculo. Média e
+desvio padrão locais foram obtidos com filtros deslizantes sobre a imagem normalizada.
+Parâmetros utilizados: $n = 15$, $k = 0{,}25$, $R = 0{,}5$, $p = 2$, $q = 10$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/phansalskar_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/phansalskar_binaria.png}
+%     \caption{Resultado -- Método de Phansalskar ($n=15$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.7 Contraste ---------------------------------------------------
+\subsection{Método do Contraste}
+
+\campo{Enunciado}{Atribui o valor de um pixel como fundo ou objeto, dependendo se seu valor
+está mais próximo do máximo ou mínimo local, respectivamente.}
+
+\campo{Abordagem escolhida}{Para cada pixel, o valor é comparado com $z_{\min}$ e $z_{\max}$
+da vizinhança: se $|p - z_{\max}| \leq |p - z_{\min}|$, o pixel é classificado como fundo
+(branco); caso contrário, como objeto (preto). Os valores extremos locais foram obtidos com
+\texttt{scipy.ndimage.minimum\_filter} e \texttt{maximum\_filter}. Vizinhança utilizada:
+$n = 15$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/contraste_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/contraste_binaria.png}
+%     \caption{Resultado -- Método do Contraste ($n=15$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.8 Média -------------------------------------------------------
+\subsection{Método da Média}
+
+\campo{Enunciado}{Seleciona o limiar como a média da distribuição local de intensidade,
+subtraída de uma constante:
+\begin{equation}
+  T = \mu(x,y) - C
+\end{equation}
+em que $\mu(x,y)$ é a média em uma vizinhança local de $(x,y)$ e $C$ é uma constante de
+ajuste do limiar. Se o valor de um pixel $(x,y)$ for maior do que o limiar $T$, o pixel será
+considerado pertencente ao objeto; caso contrário, fundo.}
+
+\campo{Abordagem escolhida}{A média local foi calculada com
+\texttt{scipy.ndimage.uniform\_filter}. O limiar por pixel é obtido subtraindo a constante
+$C$ da média local. Parâmetros utilizados: $n = 15$, $C = 10$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/media_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/media_binaria.png}
+%     \caption{Resultado -- Método da Média ($n=15$, $C=10$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------- 1.9 Mediana -----------------------------------------------------
+\subsection{Método da Mediana}
+
+\campo{Enunciado}{Seleciona o limiar como a mediana da distribuição local de intensidade.
+Se o valor de um pixel $(x,y)$ for maior do que a mediana de sua vizinhança, o pixel será
+considerado pertencente ao objeto; caso contrário, será considerado fundo.}
+
+\campo{Abordagem escolhida}{A mediana local foi calculada com
+\texttt{scipy.ndimage.median\_filter}, que aplica o filtro de mediana de forma vetorizada
+sobre toda a imagem. Vizinhança utilizada: $n = 15$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/mediana_original.png}
+%     \caption{Imagem original}
+%   \end{minipage}
+%   \hfill
+%   \begin{minipage}{0.48\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\figdir{secao_01}/mediana_binaria.png}
+%     \caption{Resultado -- Método da Mediana ($n=15$)}
+%   \end{minipage}
+% \end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Detecção de Transições em Vídeos}
+\label{sec:video}
+% ---------------------------------------------------------------------------
+
+Um vídeo digital é uma coleção de imagens (quadros) de mesmas dimensões agrupadas
+temporalmente. Os quadros se agrupam em tomadas (sequências contíguas capturadas de forma
+ininterrupta) e as tomadas em cenas semanticamente correlacionadas. O objetivo desta parte
+é detectar transições abruptas (\textit{cuts}) entre quadros consecutivos. Os vídeos são
+convertidos para escala de cinza antes do processamento.
+
+% ---------- 2.1 Pixels ------------------------------------------------------
+\subsection{Diferenças entre Pixels}
+
+\campo{Enunciado}{Dois quadros consecutivos são considerados significativamente diferentes
+se a contagem do número de pixels que sofrem alteração de intensidade, conforme uma certa
+tolerância $T_1$, é maior que um segundo limiar $T_2$.}
+
+\campo{Abordagem escolhida}{Para cada par de quadros consecutivos $F_i$ e $F_{i+1}$, foi
+calculada a diferença absoluta pixel a pixel: $D = |F_i - F_{i+1}|$. A contagem de pixels
+com $D > T_1$ é comparada com $T_2$; se a contagem exceder $T_2$, o par é marcado como
+transição abrupta. Parâmetros utilizados: $T_1 = 30$, $T_2 = 0{,}05 \times W \times H$
+(5\,\% do total de pixels).}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/pixels_transicoes.png}
+%   \caption{Métrica por quadro -- Diferenças entre Pixels}
+% \end{figure}
+
+% ---------- 2.2 Blocos ------------------------------------------------------
+\subsection{Diferenças entre Blocos}
+
+\campo{Enunciado}{Dois quadros consecutivos são divididos em blocos $8 \times 8$ ou
+$16 \times 16$ sem sobreposição. O erro quadrático da diferença de dois blocos
+correspondentes deve ser calculado e testado contra um limiar $T_1$. Se o erro for menor
+do que o limiar, os quadros são considerados similares; caso contrário, distintos. Um
+segundo limiar $T_2$ avalia o número de blocos com erro quadrático maior do que $T_1$.
+Se esse número exceder $T_2$, o quadro será considerado uma transição abrupta.}
+
+\campo{Abordagem escolhida}{Os dois quadros são divididos em blocos por fatiamento NumPy.
+O erro quadrático médio (MSE) de cada par de blocos correspondentes é calculado por
+\texttt{np.mean((b1~-~b2)**2)}. O total de blocos com MSE superior a $T_1$ é contado e
+comparado com $T_2$. Parâmetros utilizados: blocos $16 \times 16$, $T_1 = 500$,
+$T_2 = 0{,}1 \times n_{\text{blocos}}$ (10\,\% do total de blocos).}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/blocos_transicoes.png}
+%   \caption{Métrica por quadro -- Diferenças entre Blocos}
+% \end{figure}
+
+% ---------- 2.3 Histogramas -------------------------------------------------
+\subsection{Diferenças entre Histogramas}
+
+\campo{Enunciado}{A diferença $D_i$ dos histogramas de intensidade para dois quadros
+consecutivos $i$ e $i+1$ do vídeo pode ser expressa como
+\begin{equation}
+  D_i = \sum_{j=1}^{B} |H_i(j) - H_{i+1}(j)|
+\end{equation}
+em que $B$ denota o número total de \textit{bins} no histograma e $H_i(j)$ é o valor do
+histograma para o $i$-ésimo quadro no nível $j$. Um limiar $T$ deve ser utilizado para
+determinar se $D_i$ indica uma transição abrupta:
+\begin{equation}
+  T = \mu + \alpha\,\sigma
+\end{equation}
+em que $\mu$ e $\sigma$ são o valor médio e o desvio padrão da série $D_i$. O valor de
+$\alpha$ tipicamente varia de 3 a 6.}
+
+\campo{Abordagem escolhida}{Os histogramas normalizados de cada quadro foram calculados com
+\texttt{np.histogram}. A série $D_i$ foi construída como a soma das diferenças absolutas
+entre histogramas consecutivos. O limiar $T$ foi estimado pela equação acima e os índices
+onde $D_i > T$ foram marcados como transições. Parâmetros utilizados: $B = 256$,
+$\alpha = 4$.}
+
+\campo{Opções de vetorização}{A preencher.}
+
+\campo{Benchmark}{A preencher.}
+
+\campo{Discussão}{A preencher.}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/histogramas_transicoes.png}
+%   \caption{Métrica por quadro -- Diferenças entre Histogramas}
+% \end{figure}
+
+% ---------------------------------------------------------------------------
+\section{Conclusão}
+\label{sec:conclusao}
+% ---------------------------------------------------------------------------
+
+A preencher após a execução dos experimentos.
+
+% ---------------------------------------------------------------------------
+\begin{thebibliography}{9}
+
+\bibitem{bernsen1986}
+J.~Bernsen.
+``Dynamic Thresholding of Grey-Level Images''.
+\textit{Proceedings of 6th International Conference on Pattern Recognition},
+Berlim, Alemanha, pp.~1251--1255, outubro de 1986.
+
+\bibitem{niblack1986}
+W.~Niblack.
+\textit{An Introduction to Digital Image Processing}.
+Prentice Hall, 1986.
+
+\bibitem{otsu1979}
+N.~Otsu.
+``A Threshold Selection Method from Gray Level Histograms''.
+\textit{IEEE Transactions on Systems, Man and Cybernetics},
+vol.~9, n.~1, pp.~62--66, março de 1979.
+
+\bibitem{phansalskar2011}
+N.~Phansalskar, S.~More, A.~Sabale.
+``Adaptive Local Thresholding for Detection of Nuclei in Diversity Stained Cytology Images''.
+\textit{International Conference on Communications and Signal Processing},
+pp.~218--220, 2011.
+
+\bibitem{sauvola2000}
+J.~Sauvola, M.~Pietaksinen.
+``Adaptive Document Image Binarization''.
+\textit{Pattern Recognition},
+vol.~33, pp.~225--236, 2000.
+
+\end{thebibliography}
+
+\end{document}

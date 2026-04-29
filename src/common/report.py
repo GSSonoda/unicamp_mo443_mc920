@@ -4,7 +4,29 @@ from pathlib import Path
 from shutil import copy2
 from subprocess import CalledProcessError, run
 
-from src.common.paths import REPORT_DIR, report_figures_dir_for
+from src.common.paths import REPORT_DIR, REPORT_02_DIR, report_figures_dir_for, report_02_figures_dir_for
+
+
+def copy_report_files_02(
+    section: int | str,
+    files: dict[str, Path],
+) -> dict[str, Path]:
+    target_dir = report_02_figures_dir_for(section)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    missing_sources = [source for source in files.values() if not source.exists()]
+    if missing_sources:
+        missing = ", ".join(str(path) for path in missing_sources)
+        raise FileNotFoundError(f"Arquivos necessarios para o relatorio nao encontrados: {missing}")
+
+    copied: dict[str, Path] = {}
+    for filename, source in files.items():
+        destination = target_dir / filename
+        copy2(source, destination)
+        copied[filename] = destination
+
+    print(f"[info] Pasta das figuras do relatorio 2: {target_dir}")
+    return copied
 
 
 def copy_report_files(
@@ -29,7 +51,7 @@ def copy_report_files(
     return copied
 
 
-def sync_report_assets() -> None:
+def _sync_report_assets_01() -> None:
     from src.exercicio_01.main import report_files as ex01_report_files
     from src.exercicio_02.main import report_files as ex02_report_files
     from src.exercicio_03.main import report_files as ex03_report_files
@@ -44,7 +66,7 @@ def sync_report_assets() -> None:
     from src.exercicio_12.main import report_files as ex12_report_files
     from src.exercicio_13.main import report_files as ex13_report_files
 
-    print("[info] Atualizando figuras do relatorio", flush=True)
+    print("[info] Atualizando figuras do relatorio 1", flush=True)
     copy_report_files("exercicio_01", ex01_report_files())
     copy_report_files("exercicio_02", ex02_report_files())
     copy_report_files("exercicio_03", ex03_report_files())
@@ -59,11 +81,57 @@ def sync_report_assets() -> None:
     copy_report_files("exercicio_12", ex12_report_files())
     copy_report_files("exercicio_13", ex13_report_files())
 
-    print("[ok] Figuras do relatorio atualizadas", flush=True)
+    print("[ok] Figuras do relatorio 1 atualizadas", flush=True)
 
-def build_report() -> Path:
-    tex_path = REPORT_DIR / "relatorio.tex"
-    pdf_path = REPORT_DIR / "relatorio.pdf"
+
+def sync_report_assets_02() -> None:
+    from src.trabalho_02.metodo_01_global.main import report_files as m01_report_files
+    from src.trabalho_02.metodo_02_otsu.main import report_files as m02_report_files
+    from src.trabalho_02.metodo_03_bernsen.main import report_files as m03_report_files
+    from src.trabalho_02.metodo_04_niblack.main import report_files as m04_report_files
+    from src.trabalho_02.metodo_05_sauvola.main import report_files as m05_report_files
+    from src.trabalho_02.metodo_06_phansalskar.main import report_files as m06_report_files
+    from src.trabalho_02.metodo_07_contraste.main import report_files as m07_report_files
+    from src.trabalho_02.metodo_08_media.main import report_files as m08_report_files
+    from src.trabalho_02.metodo_09_mediana.main import report_files as m09_report_files
+    from src.trabalho_02.metodo_10_pixels.main import report_files as m10_report_files
+    from src.trabalho_02.metodo_11_blocos.main import report_files as m11_report_files
+    from src.trabalho_02.metodo_12_histogramas.main import report_files as m12_report_files
+
+    print("[info] Atualizando figuras do relatorio 2", flush=True)
+    copy_report_files_02("secao_01", m01_report_files())
+    copy_report_files_02("secao_01", m02_report_files())
+    copy_report_files_02("secao_01", m03_report_files())
+    copy_report_files_02("secao_01", m04_report_files())
+    copy_report_files_02("secao_01", m05_report_files())
+    copy_report_files_02("secao_01", m06_report_files())
+    copy_report_files_02("secao_01", m07_report_files())
+    copy_report_files_02("secao_01", m08_report_files())
+    copy_report_files_02("secao_01", m09_report_files())
+    copy_report_files_02("secao_02", m10_report_files())
+    copy_report_files_02("secao_02", m11_report_files())
+    copy_report_files_02("secao_02", m12_report_files())
+    print("[ok] Figuras do relatorio 2 atualizadas", flush=True)
+
+
+def sync_report_assets(report_num: int = 1) -> None:
+    if report_num == 1:
+        _sync_report_assets_01()
+    elif report_num == 2:
+        sync_report_assets_02()
+    else:
+        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1 ou 2.")
+
+def build_report(report_num: int = 1) -> Path:
+    if report_num == 1:
+        report_dir = REPORT_DIR
+    elif report_num == 2:
+        report_dir = REPORT_02_DIR
+    else:
+        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1 ou 2.")
+
+    tex_path = report_dir / "relatorio.tex"
+    pdf_path = report_dir / "relatorio.pdf"
 
     print(f"[info] Fonte do relatorio: {tex_path}", flush=True)
     print(f"[info] PDF do relatorio: {pdf_path}", flush=True)
@@ -77,7 +145,7 @@ def build_report() -> Path:
                 "-file-line-error",
                 tex_path.name,
             ],
-            cwd=REPORT_DIR,
+            cwd=report_dir,
             check=True,
         )
     except FileNotFoundError as exc:
