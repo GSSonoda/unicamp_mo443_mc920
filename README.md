@@ -70,7 +70,7 @@ src/
 └── trabalho_02/      # metodo_01_global … metodo_12_histogramas
 
 docs/
-├── relatorio/        # relatório do trabalho 1 (LaTeX + PDF)
+├── relatorio_01/     # relatório do trabalho 1 (LaTeX + PDF)
 └── relatorio_02/     # relatório do trabalho 2 (LaTeX + PDF)
 
 data/input/           # entradas baixadas na execução (não versionadas)

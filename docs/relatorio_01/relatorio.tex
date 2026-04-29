@@ -85,13 +85,13 @@ Este relatório descreve, em português, o que foi implementado em cada exercíc
 \subsection{Ambiente e organização}
 
 \campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python 3. O projeto utiliza \textit{Pillow} para leitura e gravação das imagens PNG e \textit{NumPy} nas versões vetorizadas. A infraestrutura comum de preparação de entradas, geração de saídas, sincronização das figuras do relatório e medição de desempenho foi centralizada em \arquivo{src/common/}.}
-\campo{Organização dos arquivos}{As entradas ficam em \arquivo{data/input/exercicio\_XX/}, os resultados em \arquivo{results/exercicio\_XX/}, os benchmarks em \arquivo{results/benchmarks/exercicio\_XX/} e as figuras usadas pelo \LaTeX{} em \arquivo{docs/relatorio/figuras/exercicio\_XX/}. Essa separação ajudou a manter o código dos exercícios simples e reutilizável.}
+\campo{Organização dos arquivos}{As entradas ficam em \arquivo{data/input/exercicio\_XX/}, os resultados em \arquivo{results/exercicio\_XX/}, os benchmarks em \arquivo{results/benchmarks/exercicio\_XX/} e as figuras usadas pelo \LaTeX{} em \arquivo{docs/relatorio_01/figuras/exercicio\_XX/}. Essa separação ajudou a manter o código dos exercícios simples e reutilizável.}
 \campo{Representação das imagens}{Imagens monocromáticas foram tratadas como matrizes bidimensionais de inteiros em $[0,255]$. Imagens coloridas foram representadas como matrizes de tuplas RGB. Sempre que uma transformação podia extrapolar a faixa válida, foi aplicado \textit{clipping} para manter os resultados no intervalo de 8 bits.}
 
 \subsection{Benchmarks e integração com o relatório}
 
 \campo{Medição de desempenho}{Os tempos foram coletados pelos arquivos \arquivo{results/benchmarks/exercicio\_XX/tempos\_execucao.json}, usando 10 repetições medidas e 2 execuções de aquecimento por rotina. Em cada exercício foi comparada a implementação principal com uma alternativa vetorizada em \textit{NumPy} ou, no caso do exercício 1, também com uma alternativa baseada em compreensão de listas e \texttt{zip}.}
-\campo{Figuras do relatório}{As imagens mostradas ao longo do texto foram lidas a partir de \arquivo{docs/relatorio/figuras/}, diretório alimentado pelas rotinas \texttt{report\_files()} e pelo script \arquivo{build\_report.py}. Dessa forma, o PDF permanece sincronizado com os resultados efetivamente gerados pelo código.}
+\campo{Figuras do relatório}{As imagens mostradas ao longo do texto foram lidas a partir de \arquivo{docs/relatorio_01/figuras/}, diretório alimentado pelas rotinas \texttt{report\_files()} e pelo script \arquivo{build\_report.py}. Dessa forma, o PDF permanece sincronizado com os resultados efetivamente gerados pelo código.}
 \campo{Critério de análise}{Como se trata de um trabalho introdutório, a avaliação dos resultados combinou duas frentes: inspeção visual das imagens produzidas e conferência dos tempos médios obtidos pelos benchmarks. Isso foi suficiente para verificar corretude, efeito visual e impacto real das estratégias de vetorização.}
 
 \section{Resultados e Discussão}

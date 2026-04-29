@@ -29,8 +29,8 @@ data/input/**
 results/**
 
 # Keep report figures tracked because they are part of the LaTeX source
-!docs/relatorio/figuras/
-!docs/relatorio/figuras/**
+!docs/relatorio_01/figuras/
+!docs/relatorio_01/figuras/**
 
 .vscode/settings.json
 .ruff_cache/
