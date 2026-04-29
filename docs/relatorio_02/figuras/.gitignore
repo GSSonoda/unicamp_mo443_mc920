@@ -1,6 +1,9 @@
-# Keep only the figures used by the current report.
 *
 !.gitignore
 !logo_ic.png
 !secao_01/
+!secao_01/*/
+!secao_01/*/*.png
 !secao_02/
+!secao_02/*/
+!secao_02/*/*.png

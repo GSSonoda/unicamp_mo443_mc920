@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 import numpy as np
 
@@ -31,7 +31,7 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_11_blocos"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/Buster_Keaton.mp4",
+    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/toy.mp4",
 }
 BLOCK_SIZE = 16
 T1 = 500.0
@@ -45,6 +45,7 @@ def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
         raise RuntimeError(
             "OpenCV não encontrado. Instale com: pip install opencv-python"
         ) from exc
+    # Abre o arquivo de vídeo com OpenCV
     cap = cv2.VideoCapture(str(video_path))
     frames: list[np.ndarray] = []
     while True:
@@ -52,6 +53,7 @@ def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
         if not ok:
             break
         import cv2 as _cv2
+        # Converte cada quadro de BGR para escala de cinza
         frames.append(_cv2.cvtColor(frame, _cv2.COLOR_BGR2GRAY))
     cap.release()
     return frames
@@ -65,12 +67,21 @@ def _save_metric_plot(
     title: str,
 ) -> None:
     import matplotlib
-    matplotlib.use("Agg")
+    matplotlib.use("Agg")  # backend sem display para salvar em arquivo
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(12, 4))
-    ax.plot(range(len(metrics)), metrics, color="steelblue", linewidth=0.8, label="Métrica")
-    ax.axhline(y=threshold, color="orange", linestyle="--", linewidth=1.0, label=f"T2 = {threshold:.0f}")
+    # Plota a série temporal da métrica (blocos com MSE > T1 por quadro)
+    ax.plot(
+        range(len(metrics)), metrics,
+        color="steelblue", linewidth=0.8, label="Métrica",
+    )
+    # Linha horizontal tracejada no limiar T2 absoluto (número de blocos)
+    ax.axhline(
+        y=threshold, color="orange", linestyle="--", linewidth=1.0,
+        label=f"T2 = {threshold:.0f}",
+    )
+    # Marca cada transição detectada com uma linha vertical vermelha
     for t in transitions:
         ax.axvline(x=t, color="red", linestyle="--", alpha=0.6, linewidth=0.8)
     ax.set_xlabel("Quadro")
@@ -90,9 +101,11 @@ def detect_transitions_blocos_loop(
 ) -> tuple[list[int], list[int]]:
     """Detecção por laços: MSE de blocos calculado com laços Python."""
     h, w = frames[0].shape
+    # Número de blocos inteiros em cada dimensão
     bh = h // block_size
     bw = w // block_size
     n_blocks = bh * bw
+    # T2 absoluto: número mínimo de blocos afetados para declarar transição
     t2 = t2_fraction * n_blocks
     metrics: list[int] = []
 
@@ -100,15 +113,22 @@ def detect_transitions_blocos_loop(
         count = 0
         for bi in range(bh):
             for bj in range(bw):
+                # Coordenadas do canto superior esquerdo do bloco
                 r0 = bi * block_size
                 c0 = bj * block_size
-                b1 = frames[i][r0 : r0 + block_size, c0 : c0 + block_size].astype(np.float64)
-                b2 = frames[i + 1][r0 : r0 + block_size, c0 : c0 + block_size].astype(np.float64)
+                b1 = frames[i][
+                    r0 : r0 + block_size, c0 : c0 + block_size
+                ].astype(np.float64)
+                b2 = frames[i + 1][
+                    r0 : r0 + block_size, c0 : c0 + block_size
+                ].astype(np.float64)
+                # MSE entre blocos correspondentes nos dois quadros
                 mse = np.mean((b1 - b2) ** 2)
                 if mse > t1:
                     count += 1
         metrics.append(count)
 
+    # Quadros onde a contagem de blocos supera T2 são transições
     transitions = [i for i, m in enumerate(metrics) if m > t2]
     return metrics, transitions
 
@@ -124,18 +144,34 @@ def detect_transitions_blocos(
     bh = h // block_size
     bw = w // block_size
     n_blocks = bh * bw
+    # T2 absoluto: número mínimo de blocos afetados para declarar transição
     t2 = t2_fraction * n_blocks
     metrics: list[int] = []
 
     for i in range(len(frames) - 1):
-        f1 = frames[i][:bh * block_size, :bw * block_size].astype(np.float64)
-        f2 = frames[i + 1][:bh * block_size, :bw * block_size].astype(np.float64)
-        # (bh, block_size, bw, block_size) → (n_blocks, block_size²)
-        b1 = f1.reshape(bh, block_size, bw, block_size).transpose(0, 2, 1, 3).reshape(n_blocks, -1)
-        b2 = f2.reshape(bh, block_size, bw, block_size).transpose(0, 2, 1, 3).reshape(n_blocks, -1)
+        # Recorta a região divisível por block_size (descarta borda residual)
+        f1 = frames[i][
+            :bh * block_size, :bw * block_size
+        ].astype(np.float64)
+        f2 = frames[i + 1][
+            :bh * block_size, :bw * block_size
+        ].astype(np.float64)
+        # Reshape: (bh, block_size, bw, block_size) → (n_blocks, block_size²)
+        b1 = (
+            f1.reshape(bh, block_size, bw, block_size)
+            .transpose(0, 2, 1, 3)
+            .reshape(n_blocks, -1)
+        )
+        b2 = (
+            f2.reshape(bh, block_size, bw, block_size)
+            .transpose(0, 2, 1, 3)
+            .reshape(n_blocks, -1)
+        )
+        # MSE por bloco: média dos quadrados das diferenças ao longo dos pixels
         mse_per_block = np.mean((b1 - b2) ** 2, axis=1)
         metrics.append(int((mse_per_block > t1).sum()))
 
+    # Quadros onde a contagem de blocos supera T2 são transições
     transitions = [i for i, m in enumerate(metrics) if m > t2]
     return metrics, transitions
 
@@ -148,14 +184,22 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     h, w = frames[0].shape
     bh = h // BLOCK_SIZE
     bw = w // BLOCK_SIZE
+    # T2 em número absoluto de blocos
     t2 = T2_FRACTION * bh * bw
-    metrics, transitions = detect_transitions_blocos(frames, BLOCK_SIZE, T1, T2_FRACTION)
+    metrics, transitions = detect_transitions_blocos(
+        frames, BLOCK_SIZE, T1, T2_FRACTION
+    )
 
     print(f"[info] Quadros processados: {len(frames)}")
-    print(f"[info] Transições detectadas: {len(transitions)} (quadros: {transitions})")
+    print(
+        f"[info] Transições detectadas: {len(transitions)}"
+        f" (quadros: {transitions})"
+    )
 
     output_path = output_dir / "blocos_transicoes.png"
-    _save_metric_plot(metrics, transitions, t2, output_path, "Diferenças entre Blocos")
+    _save_metric_plot(
+        metrics, transitions, t2, output_path, "Diferenças entre Blocos"
+    )
     return [output_path]
 
 
@@ -175,17 +219,21 @@ def run_benchmarks(
     warmup: int = 1,
     overwrite_inputs: bool = False,
 ) -> Path:
-    input_paths = prepare_inputs(EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs)
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
     frames = _load_frames_gray(input_paths["video"])
 
     benchmarks = {
         "detect_transitions_blocos": {
             "loop": benchmark_function(
-                detect_transitions_blocos_loop, frames, BLOCK_SIZE, T1, T2_FRACTION,
+                detect_transitions_blocos_loop,
+                frames, BLOCK_SIZE, T1, T2_FRACTION,
                 repeats=repeats, warmup=warmup,
             ),
             "vetorizado": benchmark_function(
-                detect_transitions_blocos, frames, BLOCK_SIZE, T1, T2_FRACTION,
+                detect_transitions_blocos,
+                frames, BLOCK_SIZE, T1, T2_FRACTION,
                 repeats=repeats, warmup=warmup,
             ),
         },
@@ -196,8 +244,13 @@ def run_benchmarks(
         "tempos_execucao.json",
         {
             "exercise": EXERCISE_NAME,
-            "video": {"filename": input_paths["video"].name, "n_frames": len(frames)},
-            "params": {"block_size": BLOCK_SIZE, "t1": T1, "t2_fraction": T2_FRACTION},
+            "video": {
+                "filename": input_paths["video"].name,
+                "n_frames": len(frames),
+            },
+            "params": {
+                "block_size": BLOCK_SIZE, "t1": T1, "t2_fraction": T2_FRACTION
+            },
             "benchmarks": benchmarks,
         },
     )

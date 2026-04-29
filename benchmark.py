@@ -20,18 +20,18 @@ _T1_EXERCISES = {
 }
 
 _T2_METHODS = {
-    1: "src.trabalho_02.metodo_01_global.main",
-    2: "src.trabalho_02.metodo_02_otsu.main",
-    3: "src.trabalho_02.metodo_03_bernsen.main",
-    4: "src.trabalho_02.metodo_04_niblack.main",
-    5: "src.trabalho_02.metodo_05_sauvola.main",
-    6: "src.trabalho_02.metodo_06_phansalskar.main",
-    7: "src.trabalho_02.metodo_07_contraste.main",
-    8: "src.trabalho_02.metodo_08_media.main",
-    9: "src.trabalho_02.metodo_09_mediana.main",
-    10: "src.trabalho_02.metodo_10_pixels.main",
-    11: "src.trabalho_02.metodo_11_blocos.main",
-    12: "src.trabalho_02.metodo_12_histogramas.main",
+    1: "src.trabalho_02.secao_01.metodo_01_global.main",
+    2: "src.trabalho_02.secao_01.metodo_02_otsu.main",
+    3: "src.trabalho_02.secao_01.metodo_03_bernsen.main",
+    4: "src.trabalho_02.secao_01.metodo_04_niblack.main",
+    5: "src.trabalho_02.secao_01.metodo_05_sauvola.main",
+    6: "src.trabalho_02.secao_01.metodo_06_phansalskar.main",
+    7: "src.trabalho_02.secao_01.metodo_07_contraste.main",
+    8: "src.trabalho_02.secao_01.metodo_08_media.main",
+    9: "src.trabalho_02.secao_01.metodo_09_mediana.main",
+    10: "src.trabalho_02.secao_02.metodo_10_pixels.main",
+    11: "src.trabalho_02.secao_02.metodo_11_blocos.main",
+    12: "src.trabalho_02.secao_02.metodo_12_histogramas.main",
 }
 
 

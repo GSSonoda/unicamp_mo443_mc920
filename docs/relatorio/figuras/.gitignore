@@ -2,8 +2,5 @@
 *
 !.gitignore
 !logo_ic.png
-!exercicio_01/
-!exercicio_01/input_baboon_monocromatica.png
-!exercicio_01/baboon_rotacao_90_horario.png
-!exercicio_01/baboon_rotacao_180.png
-!exercicio_01/baboon_rotacao_270_horario.png
+!exercicio_*/
+!exercicio_*/*.png

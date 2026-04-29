@@ -15,18 +15,18 @@ from src.trabalho_01.exercicio_10.main import run as run_exercicio_10
 from src.trabalho_01.exercicio_11.main import run as run_exercicio_11
 from src.trabalho_01.exercicio_12.main import run as run_exercicio_12
 from src.trabalho_01.exercicio_13.main import run as run_exercicio_13
-from src.trabalho_02.metodo_01_global.main import run as run_metodo_01
-from src.trabalho_02.metodo_02_otsu.main import run as run_metodo_02
-from src.trabalho_02.metodo_03_bernsen.main import run as run_metodo_03
-from src.trabalho_02.metodo_04_niblack.main import run as run_metodo_04
-from src.trabalho_02.metodo_05_sauvola.main import run as run_metodo_05
-from src.trabalho_02.metodo_06_phansalskar.main import run as run_metodo_06
-from src.trabalho_02.metodo_07_contraste.main import run as run_metodo_07
-from src.trabalho_02.metodo_08_media.main import run as run_metodo_08
-from src.trabalho_02.metodo_09_mediana.main import run as run_metodo_09
-from src.trabalho_02.metodo_10_pixels.main import run as run_metodo_10
-from src.trabalho_02.metodo_11_blocos.main import run as run_metodo_11
-from src.trabalho_02.metodo_12_histogramas.main import run as run_metodo_12
+from src.trabalho_02.secao_01.metodo_01_global.main import run as run_metodo_01
+from src.trabalho_02.secao_01.metodo_02_otsu.main import run as run_metodo_02
+from src.trabalho_02.secao_01.metodo_03_bernsen.main import run as run_metodo_03
+from src.trabalho_02.secao_01.metodo_04_niblack.main import run as run_metodo_04
+from src.trabalho_02.secao_01.metodo_05_sauvola.main import run as run_metodo_05
+from src.trabalho_02.secao_01.metodo_06_phansalskar.main import run as run_metodo_06
+from src.trabalho_02.secao_01.metodo_07_contraste.main import run as run_metodo_07
+from src.trabalho_02.secao_01.metodo_08_media.main import run as run_metodo_08
+from src.trabalho_02.secao_01.metodo_09_mediana.main import run as run_metodo_09
+from src.trabalho_02.secao_02.metodo_10_pixels.main import run as run_metodo_10
+from src.trabalho_02.secao_02.metodo_11_blocos.main import run as run_metodo_11
+from src.trabalho_02.secao_02.metodo_12_histogramas.main import run as run_metodo_12
 
 
 def parse_args() -> argparse.Namespace:

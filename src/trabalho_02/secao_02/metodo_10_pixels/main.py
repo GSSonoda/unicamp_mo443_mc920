@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 if __package__ in (None, ""):
-    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 import numpy as np
 
@@ -29,7 +29,7 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_10_pixels"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/Buster_Keaton.mp4",
+    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/toy.mp4",
 }
 T1 = 30
 T2_FRACTION = 0.05
@@ -42,6 +42,7 @@ def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
         raise RuntimeError(
             "OpenCV não encontrado. Instale com: pip install opencv-python"
         ) from exc
+    # Abre o arquivo de vídeo com OpenCV
     cap = cv2.VideoCapture(str(video_path))
     frames: list[np.ndarray] = []
     while True:
@@ -49,6 +50,7 @@ def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
         if not ok:
             break
         import cv2 as _cv2
+        # Converte cada quadro de BGR para escala de cinza
         frames.append(_cv2.cvtColor(frame, _cv2.COLOR_BGR2GRAY))
     cap.release()
     return frames
@@ -62,12 +64,21 @@ def _save_metric_plot(
     title: str,
 ) -> None:
     import matplotlib
-    matplotlib.use("Agg")
+    matplotlib.use("Agg")  # backend sem display para salvar em arquivo
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(12, 4))
-    ax.plot(range(len(metrics)), metrics, color="steelblue", linewidth=0.8, label="Métrica")
-    ax.axhline(y=threshold, color="orange", linestyle="--", linewidth=1.0, label=f"T2 = {threshold:.0f}")
+    # Plota a série temporal da métrica (pixels alterados por quadro)
+    ax.plot(
+        range(len(metrics)), metrics,
+        color="steelblue", linewidth=0.8, label="Métrica",
+    )
+    # Linha horizontal tracejada no limiar T2 absoluto
+    ax.axhline(
+        y=threshold, color="orange", linestyle="--", linewidth=1.0,
+        label=f"T2 = {threshold:.0f}",
+    )
+    # Marca cada transição detectada com uma linha vertical vermelha
     for t in transitions:
         ax.axvline(x=t, color="red", linestyle="--", alpha=0.6, linewidth=0.8)
     ax.set_xlabel("Quadro")
@@ -84,15 +95,19 @@ def detect_transitions_pixels_loop(
 ) -> tuple[list[int], list[int]]:
     """Detecção por laços Python: compara pixels consecutivos."""
     h, w = frames[0].shape
+    # T2 absoluto: número mínimo de pixels para declarar transição
     t2 = t2_fraction * h * w
     metrics: list[int] = []
     for i in range(len(frames) - 1):
         count = 0
         for row in range(h):
             for col in range(w):
-                if abs(int(frames[i][row, col]) - int(frames[i + 1][row, col])) > t1:
+                # Conta pixels com diferença de intensidade acima de T1
+                if abs(int(frames[i][row, col])
+                       - int(frames[i + 1][row, col])) > t1:
                     count += 1
         metrics.append(count)
+    # Quadros onde a métrica supera T2 são classificados como transições
     transitions = [i for i, m in enumerate(metrics) if m > t2]
     return metrics, transitions
 
@@ -102,11 +117,17 @@ def detect_transitions_pixels(
 ) -> tuple[list[int], list[int]]:
     """Detecção vetorizada: diferença absoluta entre frames consecutivos."""
     h, w = frames[0].shape
+    # T2 absoluto: número mínimo de pixels para declarar transição
     t2 = t2_fraction * h * w
     metrics: list[int] = []
     for i in range(len(frames) - 1):
-        diff = np.abs(frames[i].astype(np.int32) - frames[i + 1].astype(np.int32))
+        # Diferença absoluta pixel a pixel entre quadros consecutivos
+        diff = np.abs(
+            frames[i].astype(np.int32) - frames[i + 1].astype(np.int32)
+        )
+        # Conta quantos pixels ultrapassam o limiar T1
         metrics.append(int((diff > t1).sum()))
+    # Quadros onde a métrica supera T2 são classificados como transições
     transitions = [i for i, m in enumerate(metrics) if m > t2]
     return metrics, transitions
 
@@ -117,14 +138,20 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
         raise RuntimeError("Nenhum quadro carregado do vídeo.")
 
     h, w = frames[0].shape
+    # Converte fração T2 para valor absoluto de pixels
     t2 = T2_FRACTION * h * w
     metrics, transitions = detect_transitions_pixels(frames, T1, T2_FRACTION)
 
     print(f"[info] Quadros processados: {len(frames)}")
-    print(f"[info] Transições detectadas: {len(transitions)} (quadros: {transitions})")
+    print(
+        f"[info] Transições detectadas: {len(transitions)}"
+        f" (quadros: {transitions})"
+    )
 
     output_path = output_dir / "pixels_transicoes.png"
-    _save_metric_plot(metrics, transitions, t2, output_path, "Diferenças entre Pixels")
+    _save_metric_plot(
+        metrics, transitions, t2, output_path, "Diferenças entre Pixels"
+    )
     return [output_path]
 
 
@@ -144,7 +171,9 @@ def run_benchmarks(
     warmup: int = 1,
     overwrite_inputs: bool = False,
 ) -> Path:
-    input_paths = prepare_inputs(EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs)
+    input_paths = prepare_inputs(
+        EXERCISE_NAME, INPUTS, overwrite=overwrite_inputs
+    )
     frames = _load_frames_gray(input_paths["video"])
 
     benchmarks = {
@@ -165,7 +194,10 @@ def run_benchmarks(
         "tempos_execucao.json",
         {
             "exercise": EXERCISE_NAME,
-            "video": {"filename": input_paths["video"].name, "n_frames": len(frames)},
+            "video": {
+                "filename": input_paths["video"].name,
+                "n_frames": len(frames),
+            },
             "params": {"t1": T1, "t2_fraction": T2_FRACTION},
             "benchmarks": benchmarks,
         },

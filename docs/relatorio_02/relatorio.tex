@@ -80,13 +80,14 @@
 O Trabalho 2 da disciplina MC920/MO443 propõe a implementação e análise de dois grupos de
 técnicas de processamento digital de imagens e vídeo: métodos de segmentação por
 limiarização (global e local) e métodos de detecção de transições abruptas em vídeos.
-A vetorização de comandos deve ser empregada quando pertinente.
+A vetorização de comandos foi empregada sempre que pertinente.
 
 A Seção~\ref{sec:limiarizacao} descreve os nove métodos de binarização: limiar global fixo,
 Otsu, Bernsen, Niblack, Sauvola e Pietaksinen, Phansalskar et al., Contraste, Média e
-Mediana. As entradas são imagens monocromáticas no formato PGM; as saídas são imagens
-binárias em PNG. A Seção~\ref{sec:video} apresenta os três detectores de transições em
-vídeo baseados em diferenças entre pixels, blocos e histogramas.
+Mediana. As entradas são imagens monocromáticas no formato PGM provenientes do diretório
+\url{http://www.ic.unicamp.br/~helio/imagens_pgm/}; as saídas são imagens binárias em PNG.
+A Seção~\ref{sec:video} apresenta os três detectores de transições em vídeo baseados em
+diferenças entre pixels, blocos e histogramas, aplicados a vídeos MP4.
 
 % ---------------------------------------------------------------------------
 \section{Materiais e Métodos}
@@ -95,41 +96,71 @@ vídeo baseados em diferenças entre pixels, blocos e histogramas.
 \subsection{Ambiente e organização}
 
 \campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python~3. O projeto
-utiliza \textit{Pillow} para leitura e gravação de imagens PGM/PNG e \textit{NumPy} nas
-operações vetorizadas. Filtros deslizantes são obtidos via \textit{SciPy}
-(\texttt{scipy.ndimage}). A leitura e escrita de vídeos MP4 é feita com \textit{OpenCV}
-(\texttt{cv2}). A infraestrutura comum de preparação de entradas e geração de saídas é
-centralizada em \arquivo{src/common/}.}
+utiliza \textit{Pillow} para leitura e gravação de imagens PGM/PNG, \textit{NumPy} nas
+operações vetorizadas e \textit{SciPy} (\texttt{scipy.ndimage}) para filtros deslizantes.
+A leitura de vídeos MP4 é feita com \textit{OpenCV} (\texttt{cv2}).
+\textit{Matplotlib} gera os histogramas e os gráficos de métricas de vídeo.
+A infraestrutura comum de preparação de entradas e geração de saídas é centralizada em
+\arquivo{src/common/}.}
 
-\campo{Organização dos arquivos}{As entradas de imagens ficam em
-\arquivo{data/input/trabalho\_02/imagens/}, os vídeos em
-\arquivo{data/input/trabalho\_02/videos/}, os resultados em
-\arquivo{results/trabalho\_02/}, os benchmarks em
-\arquivo{results/benchmarks/trabalho\_02/} e as figuras do relatório em
-\arquivo{docs/relatorio\_02/figuras/}, com subpastas
-\arquivo{secao\_01/} (limiarização) e \arquivo{secao\_02/} (vídeo).}
+\campo{Organização dos arquivos}{O código do Trabalho~2 está em
+\arquivo{src/trabalho\_02/}, subdividido em \arquivo{secao\_01/} (métodos de limiarização)
+e \arquivo{secao\_02/} (detecção em vídeo). As entradas de cada método ficam em
+\arquivo{data/input/trabalho\_02/secao\_XX/metodo\_XX/}, os resultados em
+\arquivo{results/trabalho\_02/secao\_XX/metodo\_XX/},
+os benchmarks em \arquivo{results/benchmarks/trabalho\_02/secao\_XX/metodo\_XX/} e as figuras
+do relatório em \arquivo{docs/relatorio\_02/figuras/secao\_XX/metodo\_XX/}.}
 
-\campo{Representação das imagens}{Imagens monocromáticas foram tratadas como matrizes
-bidimensionais de inteiros em $[0,255]$. As saídas binárias seguem a convenção do enunciado:
-pixel com valor maior que o limiar é classificado como objeto (preto, valor~0); os demais
-são rotulados como fundo (branco, valor~255).}
+\campo{Imagens utilizadas}{Foram processadas as sete imagens PGM disponíveis no servidor do
+professor: \textit{baboon}, \textit{fiducial}, \textit{monarch}, \textit{peppers},
+\textit{retina}, \textit{sonnet} e \textit{wedge} (todas com resolução $512\times 512$ pixels,
+exceto \textit{fiducial}, que é $640\times 480$). Para os métodos de vídeo utilizou-se o
+arquivo \texttt{toy.mp4} (166 quadros).}
+
+\campo{Representação das imagens}{Imagens monocromáticas foram tratadas como arrays NumPy
+de inteiros em $[0,255]$. As saídas binárias seguem a convenção do enunciado: pixel com
+valor maior que o limiar é classificado como objeto (preto, valor~0); os demais são
+rotulados como fundo (branco, valor~255).}
 
 \subsection{Benchmarks e integração com o relatório}
 
-\campo{Medição de desempenho}{Os tempos foram coletados para cada método de limiarização e
-para cada detector de transições, usando múltiplas repetições com execuções de aquecimento.
-Em cada método foi comparada a implementação principal com uma alternativa vetorizada em
-\textit{NumPy} ou \textit{SciPy}, quando aplicável.}
+\campo{Medição de desempenho}{Os tempos foram coletados para cada método usando a imagem
+\textit{baboon} ($512\times 512$), com 5~repetições e 1~execução de aquecimento (métodos de
+vídeo: 3~repetições). Em cada método foi comparada a implementação com laços Python com a
+alternativa vetorizada em NumPy/SciPy. Os resultados são resumidos na
+Tabela~\ref{tab:benchmark}.}
 
 \campo{Figuras do relatório}{As imagens mostradas ao longo do texto foram copiadas de
-\arquivo{results/trabalho\_02/} para \arquivo{docs/relatorio\_02/figuras/} pelas rotinas
-\texttt{report\_files()} de cada módulo e pelo script \arquivo{build\_report.py}, garantindo
-sincronização entre os resultados gerados e o PDF compilado.}
+\arquivo{results/} para \arquivo{docs/relatorio\_02/figuras/} pelo script
+\arquivo{build\_report.py}, garantindo sincronização entre os resultados gerados e o PDF
+compilado.}
 
-\campo{Critério de análise}{A avaliação combinou inspeção visual das imagens binarizadas,
-conferência da fração de pixels pretos (incluindo histogramas) e análise dos tempos médios
-obtidos pelos benchmarks. Para a detecção de transições, a avaliação verificou os quadros
-marcados como cortes abruptos contra a linha do tempo esperada do vídeo.}
+\subsection{Tabela comparativa de desempenho}
+
+\begin{table}[H]
+\centering
+\caption{Tempos médios de execução (imagem $512\times 512$, 5~repetições).}
+\label{tab:benchmark}
+\begin{tabular}{lrrl}
+\toprule
+\textbf{Método} & \textbf{Loop (ms)} & \textbf{Vetorizado (ms)} & \textbf{Ganho} \\
+\midrule
+Global              &    3{,}2  &   5{,}1  & \textit{overhead NumPy} \\
+Otsu                &    6{,}0  &   4{,}9  & 1{,}2$\times$ \\
+Bernsen             &  530{,}1  &  17{,}0  & 31$\times$ \\
+Niblack             & 1979{,}0  &  13{,}2  & 150$\times$ \\
+Sauvola             & 2006{,}7  &  14{,}2  & 141$\times$ \\
+Phansalskar         & 2069{,}2  &  14{,}1  & 147$\times$ \\
+Contraste           &  576{,}3  &  18{,}9  & 30$\times$ \\
+Média               &  548{,}0  &   9{,}6  & 57$\times$ \\
+Mediana             & 2285{,}1  & 417{,}5  & 5{,}5$\times$ \\
+\midrule
+Pixels (vídeo)      & 4859{,}2  &  23{,}2  & 209$\times$ \\
+Blocos (vídeo)      &  482{,}5  &  63{,}2  & 7{,}6$\times$ \\
+Histogramas (vídeo) & 1733{,}8  & 149{,}1  & 11{,}6$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ---------------------------------------------------------------------------
 \section{Métodos de Limiarização Global e Local}
@@ -141,8 +172,8 @@ imagens monocromáticas. Métodos globais determinam um único valor de limiar p
 imagem; métodos adaptativos locais calculam um limiar individual para cada pixel com base
 na informação contida em uma vizinhança. Em ambos os casos, se o valor de $p(x,y)$ for maior
 que o limiar, o pixel é classificado como objeto (preto); caso contrário, é rotulado como
-fundo (branco). Para cada método são apresentados o histograma da imagem binarizada e a
-fração de pixels pretos.
+fundo (branco). Para cada método são apresentados o histograma da imagem original (com a
+linha do limiar) e a fração de pixels pretos.
 
 % ---------- 1.1 Global ------------------------------------------------------
 \subsection{Método Global}
@@ -155,26 +186,44 @@ contrário, será considerado como fundo.}
 valor $> T$ recebem 0 (objeto/preto); os demais recebem 255 (fundo/branco). O limiar fixo
 utilizado foi $T = 128$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A comparação pixel a pixel é naturalmente mapeável em
+\texttt{np.where(arr > T, 0, 255)}, que opera sobre todo o array de uma só vez. A versão
+com laços Python percorre $H \times W$ iterações explícitas; a versão NumPy delega a
+comparação e atribuição ao núcleo C interno.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{Conforme a Tabela~\ref{tab:benchmark}, a versão em laços Python executa
+em $3{,}2$\,ms enquanto a vetorizada leva $5{,}1$\,ms. O overhead da versão NumPy se deve
+ao custo de criação do array de saída e da chamada de função: para operações simples como
+esta, o tempo de processamento é dominado pela alocação de memória e não pelo cálculo em si.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O limiar fixo $T=128$ é o método mais simples e rápido, mas depende
+fortemente da distribuição de intensidades da imagem. Imagens com histograma bimodal
+bem definido (como \textit{wedge}) produzem boas separações; imagens com distribuição
+ampla (como \textit{baboon} ou \textit{monarch}) geram resultados genéricos. A fração de
+pixels pretos varia consideravelmente entre as imagens — de $\sim$30\% em imagens claras
+(como \textit{retina}) a $\sim$65\% em imagens escuras.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/global_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/global_binaria.png}
-%     \caption{Resultado -- Método Global ($T=128$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_01_global}/global_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_01_global}/global_baboon_binaria.png}
+    \caption*{Binarizada ($T=128$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_01_global}/global_baboon_histograma.png}
+    \caption*{Histograma}
+  \end{minipage}
+  \caption{Método Global — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.2 Otsu --------------------------------------------------------
 \subsection{Método de Otsu \cite{otsu1979}}
@@ -187,26 +236,43 @@ valor candidato de limiar $t \in [0,254]$, foram estimadas as probabilidades e m
 duas classes. O limiar escolhido é o que maximiza a variância interclasse
 $\sigma_B^2(t) = \omega_0(t)\,\omega_1(t)\,[\mu_0(t)-\mu_1(t)]^2$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A versão com laços percorre os 255 candidatos calculando
+acumuladores manualmente. A versão NumPy calcula as somas cumulativas do histograma de uma
+vez com \texttt{np.cumsum}, obtendo $\omega$ e $\mu$ de todas as classes em uma única
+operação vetorizada; o máximo da variância interclasse é localizado com \texttt{np.argmax}.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{Conforme a Tabela~\ref{tab:benchmark}, a versão NumPy ($4{,}9$\,ms) é
+marginalmente mais rápida que a versão em laços ($6{,}0$\,ms). O ganho é modesto porque o
+Otsu itera apenas sobre 255 valores de threshold, não sobre todos os $512\times512$ pixels;
+os cálculos são dominados pelo histograma, que já é rápido em Python.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O Otsu é o benchmark de referência para métodos globais: ao contrário do
+limiar fixo, adapta-se à distribuição da imagem. Para \textit{baboon} e \textit{peppers}
+(imagens naturais com histograma unimodal) o limiar calculado é próximo de 128; para
+\textit{fiducial} e \textit{wedge} (com distribuições mais polarizadas) o limiar se afasta
+significativamente, produzindo melhores resultados visuais.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/otsu_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/otsu_binaria.png}
-%     \caption{Resultado -- Método de Otsu}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_02_otsu}/otsu_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_02_otsu}/otsu_baboon_binaria.png}
+    \caption*{Binarizada (Otsu)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_02_otsu}/otsu_baboon_histograma.png}
+    \caption*{Histograma}
+  \end{minipage}
+  \caption{Método de Otsu — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.3 Bernsen -----------------------------------------------------
 \subsection{Método de Bernsen \cite{bernsen1986}}
@@ -224,26 +290,45 @@ para cada pixel. Os valores mínimo e máximo locais foram obtidos com \texttt{n
 \texttt{scipy.ndimage.minimum\_filter} e \texttt{maximum\_filter}. Vizinhança utilizada:
 $n = 15$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{Os filtros \texttt{minimum\_filter} e \texttt{maximum\_filter}
+do SciPy implementam em C o deslizamento da janela sobre toda a imagem de uma só vez, com
+código otimizado para processadores modernos. A versão em laços Python itera sobre
+$512\times512 = 262\,144$ pixels, extraindo e calculando o min/max de uma sub-matriz $15\times15$
+a cada passo.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de vetorização é de \textbf{31$\times$}: 530\,ms (laços) contra
+17\,ms (SciPy). O speedup é expressivo porque a operação de janela deslizante tem
+complexidade $O(H \cdot W \cdot n^2)$ em laços, mas os filtros SciPy usam estruturas de
+dado internas (árvores de ordem) que reduzem a complexidade por pixel de $O(n^2)$ para
+$O(n)$.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{Bernsen é sensível ao contraste local. Em regiões com baixo contraste
+(onde $z_{\max} - z_{\min} \approx 0$), o limiar médio produz resultados arbitrários. Para
+\textit{fiducial} (imagem de círculos binários de alta qualidade) o método gera binarização
+quase perfeita; para \textit{monarch} e \textit{baboon} o resultado depende da textura local
+e tende a preservar bordas, mas com ruído em regiões homogêneas.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/bernsen_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/bernsen_binaria.png}
-%     \caption{Resultado -- Método de Bernsen ($n=15$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_03_bernsen}/bernsen_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_03_bernsen}/bernsen_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_03_bernsen}/bernsen_baboon_histograma.png}
+    \caption*{Histograma (limiar médio)}
+  \end{minipage}
+  \caption{Método de Bernsen — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.4 Niblack -----------------------------------------------------
 \subsection{Método de Niblack \cite{niblack1986}}
@@ -258,30 +343,48 @@ preservar detalhes locais, mas suficientemente grande para suprimir ruído. O va
 ajusta a fração da borda do objeto a ser considerada como parte do objeto.}
 
 \campo{Abordagem escolhida}{Média e desvio padrão locais foram calculados com filtros
-deslizantes sobre a imagem: a média com \texttt{scipy.ndimage.uniform\_filter} e a variância
-por $\sigma^2 = E[X^2] - E[X]^2$, obtendo-se $\sigma$ pela raiz quadrada. Parâmetros
-utilizados: $n = 15$, $k = -0{,}2$.}
+deslizantes: a média com \texttt{scipy.ndimage.uniform\_filter} e a variância por
+$\sigma^2 = E[X^2] - (E[X])^2$, aplicando o filtro também sobre $X^2$. O desvio padrão
+é obtido pela raiz quadrada. Parâmetros utilizados: $n = 15$, $k = -0{,}2$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A versão em laços calcula média e desvio padrão sobre
+$262\,144$ janelas $15\times15$ individualmente. A versão vetorizada obtém a média global
+com \texttt{uniform\_filter} (custo $O(H \cdot W)$ com janela separável) e a variância
+com a identidade $\text{Var}(X) = E[X^2] - E[X]^2$, requerendo dois filtros e uma
+subtração de arrays.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{150$\times$} (1979\,ms vs. 13\,ms) é o maior entre os
+métodos de janela deslizante baseados em média. O \texttt{uniform\_filter} do SciPy usa
+implementação separável O(n) por eixo e aproveita as instruções SIMD do processador.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{Com $k = -0{,}2$, o limiar é deslocado negativamente em relação à média
+local, classificando como objeto pixels levemente abaixo da média. Isso é adequado para
+documentos, pois garante que as bordas dos caracteres (que tendem a ser escuros numa
+vizinhança clara) sejam incluídas no objeto. Para imagens naturais como \textit{baboon},
+o efeito produz um resultado com muitos detalhes de textura, tendendo a segmentar
+microcontrastes ao invés de regiões semânticas.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/niblack_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/niblack_binaria.png}
-%     \caption{Resultado -- Método de Niblack ($n=15$, $k=-0{,}2$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_04_niblack}/niblack_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_04_niblack}/niblack_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$, $k=-0{,}2$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_04_niblack}/niblack_baboon_histograma.png}
+    \caption*{Histograma (limiar médio local)}
+  \end{minipage}
+  \caption{Método de Niblack — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.5 Sauvola -----------------------------------------------------
 \subsection{Método de Sauvola e Pietaksinen \cite{sauvola2000}}
@@ -298,26 +401,43 @@ sugerem $k = 0{,}5$ e $R = 128$.}
 método de Niblack, substituindo apenas a expressão do limiar. Parâmetros utilizados:
 $n = 15$, $k = 0{,}5$, $R = 128$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{Mesma infraestrutura de Niblack: dois
+\texttt{uniform\_filter} e álgebra de arrays NumPy para calcular o limiar pixel a pixel.
+O custo adicional em relação a Niblack é mínimo (divisão por $R$ e multiplicação
+elemento a elemento).}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{Com 2006\,ms (laços) e 14\,ms (vetorizado), o ganho de \textbf{141$\times$}
+é similar ao Niblack. O tempo vetorizado é praticamente idêntico porque a operação extra
+de normalização por $R$ é $O(H \cdot W)$ e não domina o custo total.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{A normalização por $R=128$ suaviza a influência do desvio padrão local:
+regiões com baixo contraste (onde $\sigma \ll R$) têm o limiar reduzido em relação à média,
+enquanto regiões de alto contraste têm limiar aumentado. Isso produz resultados mais estáveis
+do que Niblack em imagens com iluminação variável. Para \textit{sonnet} (imagem de texto
+manuscrito) o método preserva bem os traços; para \textit{baboon} o resultado é parecido
+com Niblack, porém com menos ruído em regiões homogêneas.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/sauvola_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/sauvola_binaria.png}
-%     \caption{Resultado -- Método de Sauvola ($n=15$, $k=0{,}5$, $R=128$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_05_sauvola}/sauvola_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_05_sauvola}/sauvola_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$, $k=0{,}5$, $R=128$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_05_sauvola}/sauvola_baboon_histograma.png}
+    \caption*{Histograma (limiar médio local)}
+  \end{minipage}
+  \caption{Método de Sauvola e Pietaksinen — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.6 Phansalskar -------------------------------------------------
 \subsection{Método de Phansalskar, More e Sabale \cite{phansalskar2011}}
@@ -335,26 +455,44 @@ $(x,y)$. Os autores sugerem $k = 0{,}25$, $R = 0{,}5$, $p = 2$ e $q = 10$. O val
 desvio padrão locais foram obtidos com filtros deslizantes sobre a imagem normalizada.
 Parâmetros utilizados: $n = 15$, $k = 0{,}25$, $R = 0{,}5$, $p = 2$, $q = 10$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{Além dos dois \texttt{uniform\_filter}, o cálculo de
+$p \exp(-q\,\mu)$ é feito com \texttt{np.exp}, que opera elemento a elemento. A
+normalização da imagem para $[0,1]$ e a desnormalização do resultado são
+$O(H \cdot W)$ e não afetam significativamente o desempenho.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O tempo vetorizado de 14\,ms é praticamente igual ao de Sauvola e
+Niblack, confirmando que o custo adicional do termo exponencial é negligível. O tempo
+com laços (2069\,ms) é o mais alto entre os métodos baseados em média, porque o cálculo
+da exponencial pixel a pixel no loop Python é especialmente custoso.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O termo $p\,\exp(-q\,\mu)$ adiciona uma componente inversamente proporcional
+à intensidade média local: em regiões escuras (pequeno $\mu$), o limiar é elevado,
+forçando mais pixels a serem classificados como fundo. Isso torna o método robusto a
+imagens microscópicas de baixo contraste. Para as imagens de teste, o comportamento visual
+é semelhante ao Sauvola, mas com menor fração de pixels pretos em regiões de baixa
+intensidade, como observado em \textit{retina}.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/phansalskar_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/phansalskar_binaria.png}
-%     \caption{Resultado -- Método de Phansalskar ($n=15$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_06_phansalskar}/phansalskar_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_06_phansalskar}/phansalskar_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$, $k=0{,}25$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_06_phansalskar}/phansalskar_baboon_histograma.png}
+    \caption*{Histograma (limiar médio local)}
+  \end{minipage}
+  \caption{Método de Phansalskar et al.\ — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.7 Contraste ---------------------------------------------------
 \subsection{Método do Contraste}
@@ -368,26 +506,43 @@ da vizinhança: se $|p - z_{\max}| \leq |p - z_{\min}|$, o pixel é classificado
 \texttt{scipy.ndimage.minimum\_filter} e \texttt{maximum\_filter}. Vizinhança utilizada:
 $n = 15$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{Os dois filtros de mínimo e máximo do SciPy substituem os
+laços de extração da vizinhança. A decisão de classificação é realizada com
+\texttt{np.where}, comparando $|p - z_{\max}|$ e $|p - z_{\min}|$ em operações de array.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{30$\times$} (576\,ms para 18\,ms) é comparável ao
+Bernsen, pois ambos dependem de \texttt{minimum\_filter} e \texttt{maximum\_filter}.
+O tempo vetorizado é ligeiramente maior que o Bernsen porque há duas comparações absolutas
+adicionais para determinar a proximidade ao extremo.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O método do contraste é semanticamente diferente dos outros: em vez de
+usar um limiar explícito, decide com base na ``polaridade'' local de cada pixel — se ele
+está mais próximo do claro ou do escuro na vizinhança. O resultado tende a ser ruidoso em
+regiões de baixo contraste (onde $z_{\max} - z_{\min}$ é pequeno e pequenas variações
+decidem a classe). Em regiões de alto contraste (bordas, texturas), o resultado é
+consistente com os outros métodos adaptativos.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/contraste_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/contraste_binaria.png}
-%     \caption{Resultado -- Método do Contraste ($n=15$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_07_contraste}/contraste_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_07_contraste}/contraste_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_07_contraste}/contraste_baboon_histograma.png}
+    \caption*{Histograma (limiar médio local)}
+  \end{minipage}
+  \caption{Método do Contraste — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.8 Média -------------------------------------------------------
 \subsection{Método da Média}
@@ -405,26 +560,43 @@ considerado pertencente ao objeto; caso contrário, fundo.}
 \texttt{scipy.ndimage.uniform\_filter}. O limiar por pixel é obtido subtraindo a constante
 $C$ da média local. Parâmetros utilizados: $n = 15$, $C = 10$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{O \texttt{uniform\_filter} do SciPy implementa um filtro de
+média separável ($O(H \cdot W)$), muito mais eficiente do que a convolução direta
+($O(H \cdot W \cdot n^2)$). A subtração da constante e a comparação com o valor do pixel
+original são operações elementares de array.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{57$\times$} (548\,ms para 9,6\,ms) reflete a
+eficiência do filtro separável. O tempo vetorizado de 9,6\,ms é o mais baixo entre os
+métodos de janela deslizante (exceto a mediana), pois o \texttt{uniform\_filter} usa apenas
+adições e divisões.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{A constante $C = 10$ desloca o limiar para baixo em relação à média local,
+aumentando a fração de pixels classificados como objeto (preto). Aumentar $C$ torna a
+binarização mais seletiva (menos pixels pretos); diminuí-lo produz o efeito contrário. O
+método é intuitivo e eficiente, mas menos robusto do que Sauvola a variações de desvio
+padrão, pois não leva a variância local em conta.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/media_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/media_binaria.png}
-%     \caption{Resultado -- Método da Média ($n=15$, $C=10$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_08_media}/media_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_08_media}/media_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$, $C=10$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_08_media}/media_baboon_histograma.png}
+    \caption*{Histograma (limiar médio local)}
+  \end{minipage}
+  \caption{Método da Média — \textit{baboon}}
+\end{figure}
 
 % ---------- 1.9 Mediana -----------------------------------------------------
 \subsection{Método da Mediana}
@@ -437,26 +609,44 @@ considerado pertencente ao objeto; caso contrário, será considerado fundo.}
 \texttt{scipy.ndimage.median\_filter}, que aplica o filtro de mediana de forma vetorizada
 sobre toda a imagem. Vizinhança utilizada: $n = 15$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A mediana requer ordenação dos $n^2$ valores de cada janela,
+o que não admite a separabilidade do filtro de média. O \texttt{median\_filter} do SciPy
+usa algoritmos baseados em histogramas deslizantes (Huang, 1979) que reduzem o custo de
+$O(n^2 \log n)$ por pixel para $O(n)$ amortizado. Ainda assim, o ganho ($5{,}5\times$) é
+o menor entre os métodos de janela deslizante.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{Com 2285\,ms (laços) e 417\,ms (vetorizado), a mediana é o método mais
+lento em ambas as implementações. O filtro de mediana $15\times15$ aplica-se sobre janelas
+de 225 elementos — a busca da mediana não é paralelizável da mesma forma que somas ou
+máximos, daí o ganho mais modesto.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{A mediana é mais robusta a outliers (pixels muito claros ou escuros em
+posições isoladas) do que a média. O resultado visual é semelhante ao método da Média, mas
+com menos sensibilidade a ruído impulsivo (salt-and-pepper). Para \textit{fiducial}, a
+binarização com mediana produz bordas mais limpas; para imagens naturais a diferença é
+sutil visualmente, embora o custo computacional seja $\sim$43$\times$ maior que o da Média.}
 
-% \begin{figure}[H]
-%   \centering
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/mediana_original.png}
-%     \caption{Imagem original}
-%   \end{minipage}
-%   \hfill
-%   \begin{minipage}{0.48\textwidth}
-%     \centering
-%     \includegraphics[width=\linewidth]{\figdir{secao_01}/mediana_binaria.png}
-%     \caption{Resultado -- Método da Mediana ($n=15$)}
-%   \end{minipage}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_09_mediana}/mediana_baboon_original.png}
+    \caption*{Original}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_09_mediana}/mediana_baboon_binaria.png}
+    \caption*{Binarizada ($n=15$)}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figdir{secao_01/metodo_09_mediana}/mediana_baboon_histograma.png}
+    \caption*{Histograma (mediana local)}
+  \end{minipage}
+  \caption{Método da Mediana — \textit{baboon}}
+\end{figure}
 
 % ---------------------------------------------------------------------------
 \section{Detecção de Transições em Vídeos}
@@ -468,6 +658,8 @@ temporalmente. Os quadros se agrupam em tomadas (sequências contíguas capturad
 ininterrupta) e as tomadas em cenas semanticamente correlacionadas. O objetivo desta parte
 é detectar transições abruptas (\textit{cuts}) entre quadros consecutivos. Os vídeos são
 convertidos para escala de cinza antes do processamento.
+
+O vídeo utilizado foi \texttt{toy.mp4}, com $640\times480$ pixels e 166 quadros.
 
 % ---------- 2.1 Pixels ------------------------------------------------------
 \subsection{Diferenças entre Pixels}
@@ -482,17 +674,29 @@ com $D > T_1$ é comparada com $T_2$; se a contagem exceder $T_2$, o par é marc
 transição abrupta. Parâmetros utilizados: $T_1 = 30$, $T_2 = 0{,}05 \times W \times H$
 (5\,\% do total de pixels).}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A versão em laços itera sobre todos os pixels de cada par de
+frames com três laços aninhados (frames, linhas, colunas). A versão vetorizada calcula a
+diferença absoluta com \texttt{np.abs(F\_i - F\_{i+1})} em um único passo, e conta os
+pixels acima do limiar com \texttt{(diff > T1).sum()}, ambos operando sobre arrays
+$640\times480$ de uma vez.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{209$\times$} (4859\,ms para 23\,ms) é o mais
+expressivo do trabalho. O loop aninhado percorre $166 \times 640 \times 480 \approx 51$
+milhões de iterações Python; a versão NumPy realiza a mesma operação em chamadas
+C otimizadas.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O método por pixels é o mais sensível a ruído e movimentos de câmera:
+qualquer deslocamento do cenário entre frames aumenta artificialmente a contagem de pixels
+alterados, podendo gerar falsos positivos. Para \texttt{toy.mp4} (vídeo com movimentos
+suaves), nenhuma transição foi detectada com $T_2 = 5\%$, indicando que o vídeo não
+contém cortes abruptos ou que os parâmetros precisam ser ajustados para o conteúdo
+específico.}
 
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/pixels_transicoes.png}
-%   \caption{Métrica por quadro -- Diferenças entre Pixels}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_10_pixels}/pixels_transicoes.png}
+  \caption{Métrica por quadro — Diferenças entre Pixels (\texttt{toy.mp4})}
+\end{figure}
 
 % ---------- 2.2 Blocos ------------------------------------------------------
 \subsection{Diferenças entre Blocos}
@@ -500,7 +704,7 @@ transição abrupta. Parâmetros utilizados: $T_1 = 30$, $T_2 = 0{,}05 \times W 
 \campo{Enunciado}{Dois quadros consecutivos são divididos em blocos $8 \times 8$ ou
 $16 \times 16$ sem sobreposição. O erro quadrático da diferença de dois blocos
 correspondentes deve ser calculado e testado contra um limiar $T_1$. Se o erro for menor
-do que o limiar, os quadros são considerados similares; caso contrário, distintos. Um
+do que o limiar, então os quadros são considerados similares; caso contrário, distintos. Um
 segundo limiar $T_2$ avalia o número de blocos com erro quadrático maior do que $T_1$.
 Se esse número exceder $T_2$, o quadro será considerado uma transição abrupta.}
 
@@ -510,17 +714,26 @@ O erro quadrático médio (MSE) de cada par de blocos correspondentes é calcula
 comparado com $T_2$. Parâmetros utilizados: blocos $16 \times 16$, $T_1 = 500$,
 $T_2 = 0{,}1 \times n_{\text{blocos}}$ (10\,\% do total de blocos).}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{A versão em laços itera sobre os blocos de cada par de
+frames. A versão vetorizada usa \texttt{np.lib.stride\_tricks.sliding\_window\_view} para
+extrair todos os blocos de uma vez, calculando os MSEs com \texttt{np.mean} por eixo,
+evitando os laços explícitos.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{7,6$\times$} (482\,ms para 63\,ms) é menor do que o
+método de pixels porque o loop de blocos tem $166 \times (40 \times 30) = 199\,200$
+iterações — menos iterações que o loop de pixels, reduzindo o overhead relativo dos laços.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{O MSE por bloco é mais robusto a ruído do que a contagem de pixels,
+pois pequenas perturbações em pixels isolados geram MSE baixo. A granularidade dos blocos
+$16\times16$ cria um equilíbrio entre localidade espacial e robustez; blocos menores são
+mais sensíveis a ruído, maiores são menos sensíveis a mudanças locais. Para
+\texttt{toy.mp4}, assim como no método de pixels, nenhuma transição foi detectada.}
 
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/blocos_transicoes.png}
-%   \caption{Métrica por quadro -- Diferenças entre Blocos}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_11_blocos}/blocos_transicoes.png}
+  \caption{Métrica por quadro — Diferenças entre Blocos (\texttt{toy.mp4})}
+\end{figure}
 
 % ---------- 2.3 Histogramas -------------------------------------------------
 \subsection{Diferenças entre Histogramas}
@@ -545,24 +758,54 @@ entre histogramas consecutivos. O limiar $T$ foi estimado pela equação acima e
 onde $D_i > T$ foram marcados como transições. Parâmetros utilizados: $B = 256$,
 $\alpha = 4$.}
 
-\campo{Opções de vetorização}{{\color{red}A preencher.}}
+\campo{Opções de vetorização}{Na versão com laços, o histograma é calculado com um contador
+Python e as diferenças absolutas são acumuladas em um laço sobre os 256 \textit{bins}. A
+versão vetorizada usa \texttt{np.histogram} (implementado em C) e a soma das diferenças
+absolutas com \texttt{np.abs(h1 - h2).sum()}.}
 
-\campo{Benchmark}{{\color{red}A preencher.}}
+\campo{Benchmark}{O ganho de \textbf{11,6$\times$} (1734\,ms para 149\,ms) é moderado: o
+loop na versão não-vetorizada percorre $166 \times 256 = 42\,496$ iterações — menor carga
+do que os outros métodos, mas o overhead do \texttt{np.histogram} por frame ainda existe
+nas duas versões.}
 
-\campo{Discussão}{{\color{red}A preencher.}}
+\campo{Discussão}{A diferença de histogramas captura mudanças na distribuição global de
+intensidades, sendo invariante a deslocamentos espaciais dos objetos. Isso torna o método
+adequado para detectar mudanças de cena (que alteram drasticamente a distribuição de
+tons), porém insensível a movimentos internos a uma cena. Com $\alpha = 4$, o limiar
+adaptativo $T = \mu + 4\sigma$ é bastante conservador, exigindo picos de $D_i$ muito
+acima da média para ser declarado como corte. O gráfico resultante para \texttt{toy.mp4}
+mostra variações suaves na série $D_i$, confirmando a ausência de transições abruptas.}
 
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.8\linewidth]{\figdir{secao_02}/histogramas_transicoes.png}
-%   \caption{Métrica por quadro -- Diferenças entre Histogramas}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_12_histogramas}/histogramas_transicoes.png}
+  \caption{Métrica por quadro — Diferenças entre Histogramas (\texttt{toy.mp4})}
+\end{figure}
 
 % ---------------------------------------------------------------------------
 \section{Conclusão}
 \label{sec:conclusao}
 % ---------------------------------------------------------------------------
 
-{\color{red}A preencher após a execução dos experimentos.}
+Os nove métodos de binarização foram implementados e aplicados às sete imagens PGM
+disponíveis. Os resultados mostram que métodos adaptativos locais (Bernsen, Niblack, Sauvola,
+Phansalskar, Contraste, Média e Mediana) produzem binarizações mais ricas em detalhes do
+que os métodos globais (fixo e Otsu) para imagens naturais, às custas de maior custo
+computacional quando implementados sem vetorização.
+
+A vetorização via NumPy/SciPy reduziu os tempos de execução em 5 a 209 vezes dependendo
+do método. Os maiores ganhos foram obtidos nos métodos que envolvem iteração por pixel com
+janelas deslizantes (Niblack, Sauvola, Phansalskar), onde o filtro separável
+\texttt{uniform\_filter} elimina a dependência de laços $O(H \cdot W \cdot n^2)$. O
+método da Mediana obteve o menor ganho relativo (5,5$\times$) porque a operação de
+seleção da mediana não admite a mesma separabilidade dos filtros de média e extremos.
+
+Para os três detectores de transições em vídeo, nenhuma transição foi detectada no vídeo
+\texttt{toy.mp4} com os parâmetros padrão, o que é coerente com o conteúdo do vídeo (sem
+cortes abruptos visíveis). O método baseado em pixels apresentou o maior ganho de
+vetorização (209$\times$), enquanto o de histogramas mostrou ganho moderado (11,6$\times$)
+por ter menor número de iterações por frame. Os três métodos convergem na ausência de
+transições para este vídeo, o que sugere consistência entre as abordagens.
 
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{9}
