@@ -33,10 +33,10 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_12_histogramas"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/umn.mp4",
+    "video": "https://www.ic.unicamp.br/~helio/videos_mp4/lisa.mpg",
 }
 BINS = 256
-ALPHA = 3.0
+ALPHA = 4.0
 
 
 def _load_frames_gray(video_path: Path) -> list[np.ndarray]:

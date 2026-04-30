@@ -31,11 +31,11 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_11_blocos"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/umn.mp4",
+    "video": "https://www.ic.unicamp.br/~helio/videos_mp4/lisa.mpg",
 }
 BLOCK_SIZE = 16
-T1 = 500.0
-T2_FRACTION = 0.10
+T1 = 800.0
+T2_FRACTION = 0.50
 
 
 def _load_frames_gray(video_path: Path) -> list[np.ndarray]:

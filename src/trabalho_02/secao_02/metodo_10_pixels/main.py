@@ -29,10 +29,10 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_10_pixels"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/umn.mp4",
+    "video": "https://www.ic.unicamp.br/~helio/videos_mp4/lisa.mpg",
 }
-T1 = 25
-T2_FRACTION = 0.05
+T1 = 30
+T2_FRACTION = 0.30
 
 
 def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
