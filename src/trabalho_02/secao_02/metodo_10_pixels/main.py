@@ -42,18 +42,41 @@ def _load_frames_gray(video_path: Path) -> list[np.ndarray]:
         raise RuntimeError(
             "OpenCV não encontrado. Instale com: pip install opencv-python"
         ) from exc
-    # Abre o arquivo de vídeo com OpenCV
     cap = cv2.VideoCapture(str(video_path))
     frames: list[np.ndarray] = []
     while True:
         ok, frame = cap.read()
         if not ok:
             break
-        import cv2 as _cv2
-        # Converte cada quadro de BGR para escala de cinza
-        frames.append(_cv2.cvtColor(frame, _cv2.COLOR_BGR2GRAY))
+        frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
     cap.release()
     return frames
+
+
+def _save_transition_video(
+    frames: list[np.ndarray],
+    transitions: list[int],
+    output_path: Path,
+) -> None:
+    """Salva vídeo MP4 com os quadros de transição detectados."""
+    try:
+        import cv2
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "OpenCV não encontrado. Instale com: pip install opencv-python"
+        ) from exc
+    if not transitions:
+        print("[info] Nenhuma transição detectada; vídeo de saída não gerado.")
+        return
+    h, w = frames[0].shape
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(output_path), fourcc, 25.0, (w, h), isColor=False)
+    for idx in transitions:
+        writer.write(frames[idx])
+        if idx + 1 < len(frames):
+            writer.write(frames[idx + 1])
+    writer.release()
+    print(f"[info] Vídeo de transições salvo em: {output_path}")
 
 
 def _save_metric_plot(
@@ -148,11 +171,13 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
         f" (quadros: {transitions})"
     )
 
-    output_path = output_dir / "pixels_transicoes.png"
-    _save_metric_plot(
-        metrics, transitions, t2, output_path, "Diferenças entre Pixels"
-    )
-    return [output_path]
+    plot_path = output_dir / "pixels_transicoes.png"
+    _save_metric_plot(metrics, transitions, t2, plot_path, "Diferenças entre Pixels")
+
+    video_path = output_dir / "pixels_transicoes.mp4"
+    _save_transition_video(frames, transitions, video_path)
+
+    return [plot_path]
 
 
 def run(overwrite: bool = False) -> list[Path]:
