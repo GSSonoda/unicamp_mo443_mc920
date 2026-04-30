@@ -940,12 +940,18 @@ elemento a elemento).}
 é similar ao Niblack. O tempo vetorizado é praticamente idêntico porque a operação extra
 de normalização por $R$ é $O(H \cdot W)$ e não domina o custo total.}
 
-\campo{Discussão}{A normalização por $R=128$ suaviza a influência do desvio padrão local:
-regiões com baixo contraste (onde $\sigma \ll R$) têm o limiar reduzido em relação à média,
-enquanto regiões de alto contraste têm limiar aumentado. Isso produz resultados mais estáveis
-do que Niblack em imagens com iluminação variável. Para \textit{sonnet} (imagem de texto
-manuscrito) o método preserva bem os traços; para \textit{baboon} o resultado é parecido
-com Niblack, porém com menos ruído em regiões homogêneas.}
+\campo{Discussão}{A fórmula multiplicativa de Sauvola produz, na prática, limiares
+sistematicamente abaixo da média local: quando $\sigma \ll R = 128$ (caso típico em
+regiões homogêneas), $T \approx \mu \cdot [1 + 0{,}5 \cdot (0 - 1)] = 0{,}5\,\mu$.
+Como a maioria dos pixels está \emph{acima} da metade da sua média local, quase todo
+pixel é classificado como objeto (preto). Na prática, Sauvola é mais agressivo do que
+Niblack: enquanto Niblack produz 58\,\% de pixels pretos em \textit{baboon}, Sauvola
+chega a 94\,\%. Para \textit{sonnet} e \textit{wedge} — imagens de baixíssimo contraste
+local ($\sigma_{\text{médio}} \approx 6$ e $4$) — o limiar colapsa para cerca de
+metade da média em toda a imagem, resultando em 100\,\% de pixels pretos
+(falha completa). O método foi proposto para imagens de documentos com distribuição
+específica; aplicado a imagens naturais com grandes regiões homogêneas, produz
+over-segmentação severa.}
 
 \begin{figure}[H]
   \centering
