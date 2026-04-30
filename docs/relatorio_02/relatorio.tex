@@ -115,7 +115,7 @@ do relatório em \arquivo{docs/relatorio\_02/figuras/secao\_XX/metodo\_XX/}.}
 professor: \textit{baboon}, \textit{fiducial}, \textit{monarch}, \textit{peppers},
 \textit{retina}, \textit{sonnet} e \textit{wedge} (todas com resolução $512\times 512$ pixels,
 exceto \textit{fiducial}, que é $640\times 480$). Para os métodos de vídeo utilizou-se o
-arquivo \texttt{toy.mp4} (166 quadros).}
+arquivo \texttt{umn.mp4}.}
 
 \campo{Representação das imagens}{Imagens monocromáticas foram tratadas como arrays NumPy
 de inteiros em $[0,255]$. As saídas binárias seguem a convenção do enunciado: pixel com
@@ -1847,7 +1847,7 @@ ininterrupta) e as tomadas em cenas semanticamente correlacionadas. O objetivo d
 é detectar transições abruptas (\textit{cuts}) entre quadros consecutivos. Os vídeos são
 convertidos para escala de cinza antes do processamento.
 
-O vídeo utilizado foi \texttt{toy.mp4}, com $640\times480$ pixels e 166 quadros.
+O vídeo utilizado foi \texttt{umn.mp4}, disponível no servidor do professor.
 
 % ---------- 2.1 Pixels ------------------------------------------------------
 \subsection{Diferenças entre Pixels}
@@ -1859,7 +1859,7 @@ tolerância $T_1$, é maior que um segundo limiar $T_2$.}
 \campo{Abordagem escolhida}{Para cada par de quadros consecutivos $F_i$ e $F_{i+1}$, foi
 calculada a diferença absoluta pixel a pixel: $D = |F_i - F_{i+1}|$. A contagem de pixels
 com $D > T_1$ é comparada com $T_2$; se a contagem exceder $T_2$, o par é marcado como
-transição abrupta. Parâmetros utilizados: $T_1 = 30$, $T_2 = 0{,}05 \times W \times H$
+transição abrupta. Parâmetros utilizados: $T_1 = 25$, $T_2 = 0{,}05 \times W \times H$
 (5\,\% do total de pixels).}
 
 \campo{Opções de vetorização}{A versão em laços itera sobre todos os pixels de cada par de
@@ -1874,16 +1874,16 @@ milhões de iterações Python; a versão NumPy realiza a mesma operação em ch
 C otimizadas.}
 
 \campo{Discussão}{O método por pixels é o mais sensível a ruído e movimentos de câmera:
-qualquer deslocamento do cenário entre frames aumenta artificialmente a contagem de pixels
-alterados, podendo gerar falsos positivos. Para \texttt{toy.mp4} (vídeo com movimentos
-suaves), nenhuma transição foi detectada com $T_2 = 5\%$, indicando que o vídeo não
-contém cortes abruptos ou que os parâmetros precisam ser ajustados para o conteúdo
-específico.}
+qualquer deslocamento do cenário entre quadros aumenta artificialmente a contagem de pixels
+alterados, podendo gerar falsos positivos. Para minimizar isso, $T_1 = 25$ filtra
+variações de ruído menores que 25 níveis de cinza; $T_2 = 5\%$ garante que apenas
+quadros onde realmente a maioria da cena muda sejam marcados como corte. Os picos no
+gráfico correspondem aos cortes abruptos detectados no vídeo \texttt{umn.mp4}.}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_10_pixels}/pixels_transicoes.png}
-  \caption{Métrica por quadro — Diferenças entre Pixels (\texttt{toy.mp4})}
+  \caption{Métrica por quadro — Diferenças entre Pixels (\texttt{umn.mp4})}
 \end{figure}
 
 % ---------- 2.2 Blocos ------------------------------------------------------
@@ -1914,13 +1914,14 @@ iterações — menos iterações que o loop de pixels, reduzindo o overhead rel
 \campo{Discussão}{O MSE por bloco é mais robusto a ruído do que a contagem de pixels,
 pois pequenas perturbações em pixels isolados geram MSE baixo. A granularidade dos blocos
 $16\times16$ cria um equilíbrio entre localidade espacial e robustez; blocos menores são
-mais sensíveis a ruído, maiores são menos sensíveis a mudanças locais. Para
-\texttt{toy.mp4}, assim como no método de pixels, nenhuma transição foi detectada.}
+mais sensíveis a ruído, maiores são menos sensíveis a mudanças locais. Um corte abrupto
+tipicamente eleva o MSE de quase todos os blocos simultaneamente, gerando um pico
+pronunciado na série temporal.}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_11_blocos}/blocos_transicoes.png}
-  \caption{Métrica por quadro — Diferenças entre Blocos (\texttt{toy.mp4})}
+  \caption{Métrica por quadro — Diferenças entre Blocos (\texttt{umn.mp4})}
 \end{figure}
 
 % ---------- 2.3 Histogramas -------------------------------------------------
@@ -1944,7 +1945,8 @@ $\alpha$ tipicamente varia de 3 a 6.}
 \texttt{np.histogram}. A série $D_i$ foi construída como a soma das diferenças absolutas
 entre histogramas consecutivos. O limiar $T$ foi estimado pela equação acima e os índices
 onde $D_i > T$ foram marcados como transições. Parâmetros utilizados: $B = 256$,
-$\alpha = 4$.}
+$\alpha = 3$ (limite inferior do intervalo sugerido pelo enunciado, conferindo maior
+sensibilidade a cortes de baixo contraste).}
 
 \campo{Opções de vetorização}{Na versão com laços, o histograma é calculado com um contador
 Python e as diferenças absolutas são acumuladas em um laço sobre os 256 \textit{bins}. A
@@ -1959,15 +1961,15 @@ nas duas versões.}
 \campo{Discussão}{A diferença de histogramas captura mudanças na distribuição global de
 intensidades, sendo invariante a deslocamentos espaciais dos objetos. Isso torna o método
 adequado para detectar mudanças de cena (que alteram drasticamente a distribuição de
-tons), porém insensível a movimentos internos a uma cena. Com $\alpha = 4$, o limiar
-adaptativo $T = \mu + 4\sigma$ é bastante conservador, exigindo picos de $D_i$ muito
-acima da média para ser declarado como corte. O gráfico resultante para \texttt{toy.mp4}
-mostra variações suaves na série $D_i$, confirmando a ausência de transições abruptas.}
+tons), porém insensível a movimentos internos a uma cena. Com $\alpha = 3$, o limiar
+adaptativo $T = \mu + 3\sigma$ equilibra sensibilidade e robustez: picos que representam
+cortes reais ficam visivelmente acima do limiar, enquanto variações contínuas de
+iluminação e movimento permanecem abaixo.}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\linewidth]{\figdir{secao_02/metodo_12_histogramas}/histogramas_transicoes.png}
-  \caption{Métrica por quadro — Diferenças entre Histogramas (\texttt{toy.mp4})}
+  \caption{Métrica por quadro — Diferenças entre Histogramas (\texttt{umn.mp4})}
 \end{figure}
 
 % ---------------------------------------------------------------------------
@@ -1988,12 +1990,13 @@ janelas deslizantes (Niblack, Sauvola, Phansalskar), onde o filtro separável
 método da Mediana obteve o menor ganho relativo (5,5$\times$) porque a operação de
 seleção da mediana não admite a mesma separabilidade dos filtros de média e extremos.
 
-Para os três detectores de transições em vídeo, nenhuma transição foi detectada no vídeo
-\texttt{toy.mp4} com os parâmetros padrão, o que é coerente com o conteúdo do vídeo (sem
-cortes abruptos visíveis). O método baseado em pixels apresentou o maior ganho de
-vetorização (209$\times$), enquanto o de histogramas mostrou ganho moderado (11,6$\times$)
-por ter menor número de iterações por frame. Os três métodos convergem na ausência de
-transições para este vídeo, o que sugere consistência entre as abordagens.
+Para os três detectores de transições em vídeo, o arquivo \texttt{umn.mp4} foi
+utilizado por ser um filme mudo com cortes abruptos frequentes entre tomadas — cenário
+ideal para validar os algoritmos. Os três métodos detectam os mesmos eventos de transição
+com ligeiras diferenças nos quadros exatos, demonstrando consistência entre as abordagens.
+O método baseado em pixels ($T_1=25$, $T_2=5\%$) apresentou o maior ganho de vetorização
+(209$\times$); o de histogramas ($B=256$, $\alpha=3$) é o mais robusto a movimentos de
+câmera por operar sobre a distribuição global em vez de pixels individuais.
 
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{9}

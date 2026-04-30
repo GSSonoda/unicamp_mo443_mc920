@@ -29,9 +29,9 @@ from src.common.runner import run_exercise
 
 EXERCISE_NAME = "metodo_10_pixels"
 INPUTS = {
-    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/toy.mp4",
+    "video": "http://www.ic.unicamp.br/~helio/videos_mp4/umn.mp4",
 }
-T1 = 30
+T1 = 25
 T2_FRACTION = 0.05
 
 
@@ -66,15 +66,15 @@ def _save_transition_video(
             "OpenCV não encontrado. Instale com: pip install opencv-python"
         ) from exc
     if not transitions:
-        print("[info] Nenhuma transição detectada; vídeo de saída não gerado.")
+        print("[info] Nenhuma transição detectada; vídeo MP4 não gerado.")
         return
     h, w = frames[0].shape
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    writer = cv2.VideoWriter(str(output_path), fourcc, 25.0, (w, h), isColor=False)
+    writer = cv2.VideoWriter(str(output_path), fourcc, 25.0, (w, h))
     for idx in transitions:
-        writer.write(frames[idx])
+        writer.write(cv2.cvtColor(frames[idx], cv2.COLOR_GRAY2BGR))
         if idx + 1 < len(frames):
-            writer.write(frames[idx + 1])
+            writer.write(cv2.cvtColor(frames[idx + 1], cv2.COLOR_GRAY2BGR))
     writer.release()
     print(f"[info] Vídeo de transições salvo em: {output_path}")
 
@@ -177,7 +177,10 @@ def process(input_paths: dict[str, Path], output_dir: Path) -> list[Path]:
     video_path = output_dir / "pixels_transicoes.mp4"
     _save_transition_video(frames, transitions, video_path)
 
-    return [plot_path]
+    saved = [plot_path]
+    if video_path.exists():
+        saved.append(video_path)
+    return saved
 
 
 def run(overwrite: bool = False) -> list[Path]:
