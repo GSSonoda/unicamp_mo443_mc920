@@ -172,8 +172,10 @@ imagens monocromáticas. Métodos globais determinam um único valor de limiar p
 imagem; métodos adaptativos locais calculam um limiar individual para cada pixel com base
 na informação contida em uma vizinhança. Em ambos os casos, se o valor de $p(x,y)$ for maior
 que o limiar, o pixel é classificado como objeto (preto); caso contrário, é rotulado como
-fundo (branco). Para cada método são apresentados o histograma da imagem original (com a
-linha do limiar) e a fração de pixels pretos.
+fundo (branco). Para cada método são apresentados o histograma da \textbf{imagem
+binarizada} (duas barras em 0 e 255, com as frações de pixels pretos e brancos indicadas)
+e o limiar utilizado. Para métodos locais, o limiar anotado é a média espacial do mapa de
+limiares calculado pixel a pixel.
 
 % ---------- 1.1 Global ------------------------------------------------------
 \subsection{Método Global}

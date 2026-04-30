@@ -92,35 +92,33 @@ def _save_histogram(
     output_path: Path,
     title: str,
 ) -> None:
-    """Salva histograma com linha do limiar e anotação de pixels pretos."""
+    """Salva histograma da imagem binarizada com frações de pixels pretos e brancos."""
     import matplotlib
-    matplotlib.use("Agg")  # backend sem display para salvar em arquivo
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    # Achata a imagem para array 1-D de intensidades
-    arr = np.array(original, dtype=np.uint8).ravel()
     bin_arr = np.array(binary, dtype=np.uint8).ravel()
-    # Fração de pixels binarizados como preto (objeto)
-    black_fraction = float((bin_arr == 0).sum()) / bin_arr.size * 100
+    n_black = int((bin_arr == 0).sum())
+    n_white = int((bin_arr == 255).sum())
+    total = bin_arr.size
+    frac_black = n_black / total * 100
+    frac_white = n_white / total * 100
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-    # Histograma com 256 bins cobrindo [0, 255]
-    ax.hist(arr, bins=256, range=(0, 255), color="steelblue", alpha=0.8)
-    # Linha vertical vermelha tracejada na média dos limiares locais
-    ax.axvline(
-        x=threshold_val, color="red", linestyle="--", linewidth=1.5,
-        label=f"Limiar médio = {threshold_val:.1f}",
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.bar(
+        [0, 255], [n_black, n_white], width=30,
+        color=["#222222", "#eeeeee"], edgecolor="gray",
     )
-    # Anotação com percentual de pixels pretos na imagem binarizada
-    ax.text(
-        0.98, 0.95, f"Pixels pretos: {black_fraction:.1f}%",
-        transform=ax.transAxes, ha="right", va="top",
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
-    )
-    ax.set_xlabel("Intensidade")
-    ax.set_ylabel("Frequência")
+    ax.text(0,   n_black, f"{frac_black:.1f}%", ha="center", va="bottom",
+            fontsize=10, fontweight="bold")
+    ax.text(255, n_white, f"{frac_white:.1f}%", ha="center", va="bottom",
+            fontsize=10, fontweight="bold")
+    ax.set_xlim(-40, 295)
+    ax.set_xticks([0, 255])
+    ax.set_xticklabels(["0\n(preto)", "255\n(branco)"])
+    ax.set_xlabel("Valor do pixel")
+    ax.set_ylabel("Pixels")
     ax.set_title(title)
-    ax.legend()
     plt.tight_layout()
     plt.savefig(str(output_path), dpi=100)
     plt.close(fig)
