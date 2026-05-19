@@ -27,6 +27,8 @@ from src.trabalho_02.secao_01.metodo_09_mediana.main import run as run_metodo_09
 from src.trabalho_02.secao_02.metodo_10_pixels.main import run as run_metodo_10
 from src.trabalho_02.secao_02.metodo_11_blocos.main import run as run_metodo_11
 from src.trabalho_02.secao_02.metodo_12_histogramas.main import run as run_metodo_12
+from src.trabalho_03.analise_01_espectro_histograma.main import run as run_analise_01
+from src.trabalho_03.analise_02_invariancia.main import run as run_analise_02
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,10 +38,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--trabalho",
         type=int,
-        choices=[1, 2],
+        choices=[1, 2, 3],
         default=None,
-        metavar="{1,2}",
-        help="Limita a execucao a um trabalho especifico (padrao: ambos).",
+        metavar="{1,2,3}",
+        help="Limita a execucao a um trabalho especifico (padrao: todos).",
     )
     parser.add_argument(
         "--overwrite",
@@ -84,6 +86,13 @@ def run_trabalho_02(overwrite: bool) -> None:
     print("[ok] Trabalho 2 concluido", flush=True)
 
 
+def run_trabalho_03(overwrite: bool) -> None:
+    print("[info] Executando trabalho 3", flush=True)
+    run_analise_01(overwrite=overwrite)
+    run_analise_02(overwrite=overwrite)
+    print("[ok] Trabalho 3 concluido", flush=True)
+
+
 def main() -> int:
     args = parse_args()
 
@@ -92,6 +101,8 @@ def main() -> int:
             run_trabalho_01(overwrite=args.overwrite)
         if args.trabalho in (None, 2):
             run_trabalho_02(overwrite=args.overwrite)
+        if args.trabalho in (None, 3):
+            run_trabalho_03(overwrite=args.overwrite)
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"[erro] {exc}")

@@ -34,6 +34,11 @@ _T2_METHODS = {
     12: "src.trabalho_02.secao_02.metodo_12_histogramas.main",
 }
 
+_T3_ANALYSES = {
+    1: "src.trabalho_03.analise_01_espectro_histograma.main",
+    2: "src.trabalho_03.analise_02_invariancia.main",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -43,16 +48,17 @@ def parse_args() -> argparse.Namespace:
         "numero",
         type=int,
         help=(
-            "Numero do exercicio (trabalho 1: 1-13) "
-            "ou do metodo (trabalho 2: 1-12)."
+            "Numero do exercicio (trabalho 1: 1-13), "
+            "do metodo (trabalho 2: 1-12) "
+            "ou da analise (trabalho 3: 1-2)."
         ),
     )
     parser.add_argument(
         "--trabalho",
         type=int,
-        choices=[1, 2],
+        choices=[1, 2, 3],
         default=1,
-        metavar="{1,2}",
+        metavar="{1,2,3}",
         help="Numero do trabalho (padrao: 1).",
     )
     parser.add_argument(
@@ -65,9 +71,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    registry = _T1_EXERCISES if args.trabalho == 1 else _T2_METHODS
+    if args.trabalho == 1:
+        registry = _T1_EXERCISES
+    elif args.trabalho == 2:
+        registry = _T2_METHODS
+    else:
+        registry = _T3_ANALYSES
     limit = max(registry)
-
     if args.numero not in registry:
         print(
             f"[erro] Trabalho {args.trabalho} possui itens de 1 a {limit}. "

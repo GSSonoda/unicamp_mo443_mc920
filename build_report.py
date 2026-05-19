@@ -20,9 +20,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--report",
         type=int,
-        choices=[1, 2],
+        choices=[1, 2, 3],
         default=1,
-        metavar="{1,2}",
+        metavar="{1,2,3}",
         help="Número do trabalho cujo relatório deve ser gerado (padrão: 1).",
     )
     return parser.parse_args()

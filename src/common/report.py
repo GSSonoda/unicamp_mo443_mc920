@@ -6,10 +6,34 @@ from subprocess import CalledProcessError, run
 
 from src.common.paths import (
     REPORT_02_DIR,
+    REPORT_03_DIR,
     REPORT_DIR,
     report_02_figures_dir_for,
+    report_03_figures_dir_for,
     report_figures_dir_for,
 )
+
+
+def copy_report_files_03(
+    analysis: str,
+    files: dict[str, Path],
+) -> dict[str, Path]:
+    target_dir = report_03_figures_dir_for(analysis)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    missing_sources = [source for source in files.values() if not source.exists()]
+    if missing_sources:
+        missing = ", ".join(str(path) for path in missing_sources)
+        raise FileNotFoundError(f"Arquivos necessarios para o relatorio nao encontrados: {missing}")
+
+    copied: dict[str, Path] = {}
+    for filename, source in files.items():
+        destination = target_dir / filename
+        copy2(source, destination)
+        copied[filename] = destination
+
+    print(f"[info] Pasta das figuras do relatorio 3: {target_dir}")
+    return copied
 
 
 def copy_report_files_02(
@@ -169,21 +193,39 @@ def sync_report_assets_02() -> None:
     print("[ok] Figuras do relatorio 2 atualizadas", flush=True)
 
 
+def sync_report_assets_03() -> None:
+    from src.trabalho_03.analise_01_espectro_histograma.main import (
+        report_files as a01_report_files,
+    )
+    from src.trabalho_03.analise_02_invariancia.main import (
+        report_files as a02_report_files,
+    )
+
+    print("[info] Atualizando figuras do relatorio 3", flush=True)
+    copy_report_files_03("analise_01_espectro_histograma", a01_report_files())
+    copy_report_files_03("analise_02_invariancia", a02_report_files())
+    print("[ok] Figuras do relatorio 3 atualizadas", flush=True)
+
+
 def sync_report_assets(report_num: int = 1) -> None:
     if report_num == 1:
         _sync_report_assets_01()
     elif report_num == 2:
         sync_report_assets_02()
+    elif report_num == 3:
+        sync_report_assets_03()
     else:
-        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1 ou 2.")
+        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1, 2 ou 3.")
 
 def build_report(report_num: int = 1) -> Path:
     if report_num == 1:
         report_dir = REPORT_DIR
     elif report_num == 2:
         report_dir = REPORT_02_DIR
+    elif report_num == 3:
+        report_dir = REPORT_03_DIR
     else:
-        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1 ou 2.")
+        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1, 2 ou 3.")
 
     tex_path = report_dir / "relatorio.tex"
     pdf_path = report_dir / "relatorio.pdf"

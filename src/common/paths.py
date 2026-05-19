@@ -10,6 +10,8 @@ REPORT_DIR = DOCS_DIR / "relatorio_01"
 REPORT_FIGURES_DIR = REPORT_DIR / "figuras"
 REPORT_02_DIR = DOCS_DIR / "relatorio_02"
 REPORT_02_FIGURES_DIR = REPORT_02_DIR / "figuras"
+REPORT_03_DIR = DOCS_DIR / "relatorio_03"
+REPORT_03_FIGURES_DIR = REPORT_03_DIR / "figuras"
 BENCHMARKS_DIR = ROOT_DIR / "results" / "benchmarks"
 
 
@@ -32,6 +34,8 @@ def input_dir_for(exercise: int | str) -> Path:
     name = normalize_exercise(exercise)
     if name.startswith("exercicio_"):
         return INPUTS_DIR / "trabalho_01" / name
+    if name.startswith("analise_"):
+        return INPUTS_DIR / "trabalho_03" / name
     return INPUTS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -39,6 +43,8 @@ def results_dir_for(exercise: int | str) -> Path:
     name = normalize_exercise(exercise)
     if name.startswith("exercicio_"):
         return RESULTS_DIR / "trabalho_01" / name
+    if name.startswith("analise_"):
+        return RESULTS_DIR / "trabalho_03" / name
     return RESULTS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -46,6 +52,8 @@ def benchmarks_dir_for(exercise: int | str) -> Path:
     name = normalize_exercise(exercise)
     if name.startswith("exercicio_"):
         return BENCHMARKS_DIR / "trabalho_01" / name
+    if name.startswith("analise_"):
+        return BENCHMARKS_DIR / "trabalho_03" / name
     return BENCHMARKS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -55,3 +63,7 @@ def report_figures_dir_for(exercise: int | str) -> Path:
 
 def report_02_figures_dir_for(method: str) -> Path:
     return REPORT_02_FIGURES_DIR / _method_section(method) / method
+
+
+def report_03_figures_dir_for(analysis: str) -> Path:
+    return REPORT_03_FIGURES_DIR / analysis
