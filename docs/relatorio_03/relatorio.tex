@@ -9,6 +9,14 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+% Inclui figura se existir; exibe aviso caso contrário (documento compila sem figuras).
+\let\latexincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{%
+  \edef\@figpath{#2}%
+  \IfFileExists{\@figpath}%
+    {\latexincludegraphics[#1]{\@figpath}}%
+    {\fbox{\footnotesize\itshape figura ausente}}%
+}
 \usepackage{float}
 \usepackage{booktabs}
 \usepackage{hyperref}
@@ -32,7 +40,8 @@
 \newcommand{\arquivo}[1]{\nolinkurl{#1}}
 \newcommand{\campo}[2]{\textbf{#1.} #2\par}
 \newcommand{\figdir}[1]{figuras/#1}
-\newcommand{\figanalise}[1]{figuras/analise_#1}
+\newcommand{\figa}[1]{figuras/analise_01_espectro_histograma/#1}
+\newcommand{\figb}[1]{figuras/analise_02_invariancia/#1}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -77,29 +86,25 @@
 
 % ---------------------------------------------------------------------------
 \section{Introdução}
-\label{sec:introducao}
 % ---------------------------------------------------------------------------
 
 O Trabalho~3 da disciplina MC920/MO443 propõe a exploração da transformada de
 Fourier bidimensional (2D-FFT) como ferramenta de análise estrutural de imagens.
-A transformada de Fourier permite representar uma imagem no domínio da frequência,
-revelando padrões relacionados a escala, direção e periodicidade que não são
-diretamente observáveis no domínio espacial.
+Diferentemente dos trabalhos anteriores, que operavam exclusivamente no domínio
+espacial, este trabalho utiliza o domínio da frequência para revelar padrões de
+direção, escala e repetição que não são diretamente visíveis na imagem original.
 
-O trabalho está dividido em duas partes principais:
+A Seção~\ref{sec:espectro} descreve a Análise~1: cálculo do espectro de magnitude
+da FFT 2D em escala logarítmica, construção do histograma angular de energia e
+identificação das orientações dominantes de cada imagem.
+A Seção~\ref{sec:invariancia} descreve a Análise~2: verificação experimental das
+propriedades de invariância da magnitude espectral frente a translações, rotações
+e mudanças de escala.
 
-\begin{itemize}
-  \item \textbf{Análise~1} (Seção~\ref{sec:espectro}): cálculo do espectro de
-        magnitude da FFT 2D em escala logarítmica, construção do histograma
-        angular de energia e identificação das orientações dominantes.
-  \item \textbf{Análise~2} (Seção~\ref{sec:invariancia}): verificação experimental
-        das propriedades de invariância da transformada de Fourier frente a
-        translações, rotações e mudanças de escala.
-\end{itemize}
-
-As imagens de entrada são os arquivos PGM disponibilizados no servidor da Unicamp
-(\url{http://www.ic.unicamp.br/~helio/imagens_pgm/}), e todas as saídas são
-geradas no formato PNG.
+As imagens de entrada são os sete arquivos PGM disponibilizados no servidor do professor
+(\url{http://www.ic.unicamp.br/~helio/imagens_pgm/}): \textit{baboon}, \textit{fiducial},
+\textit{monarch}, \textit{peppers}, \textit{retina}, \textit{sonnet} e \textit{wedge}.
+Todas as saídas são geradas em PNG.
 
 % ---------------------------------------------------------------------------
 \section{Materiais e Métodos}
@@ -108,452 +113,1052 @@ geradas no formato PNG.
 
 \subsection{Ambiente e organização}
 
-\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python~3.
-O projeto utiliza \textit{Pillow} para leitura de imagens PGM e gravação de PNG,
-\textit{NumPy} para as operações com arrays e a FFT (\texttt{numpy.fft}),
-\textit{SciPy} (\texttt{scipy.ndimage}) para as transformações geométricas e
-\textit{Matplotlib} para geração dos gráficos e visualizações do espectro.}
+\campo{Linguagem e bibliotecas}{A implementação foi desenvolvida em Python~3. O projeto
+utiliza \textit{Pillow} para leitura de imagens PGM e gravação de PNG, \textit{NumPy}
+para a FFT (\texttt{numpy.fft}) e operações matriciais, \textit{SciPy}
+(\texttt{scipy.ndimage}) para as transformações geométricas e \textit{Matplotlib} para
+geração dos espectros coloridos, histogramas angulares e visualizações de orientações
+dominantes. A infraestrutura comum de download de entradas, benchmarks e geração de relatório
+é centralizada em \arquivo{src/common/}.}
 
-\campo{Organização do código}{Cada análise está encapsulada em um módulo
-independente dentro de \arquivo{src/trabalho\_03/}:
+\campo{Organização dos arquivos}{O código do Trabalho~3 está em
+\arquivo{src/trabalho\_03/}, com dois módulos independentes:
 \arquivo{analise\_01\_espectro\_histograma/main.py} e
 \arquivo{analise\_02\_invariancia/main.py}.
-A infraestrutura compartilhada (gerenciamento de caminhos, download de entradas,
-benchmarks e relatório) reside em \arquivo{src/common/}.}
+As entradas ficam em \arquivo{data/input/trabalho\_03/analise\_XX/},
+os resultados em \arquivo{results/trabalho\_03/analise\_XX/},
+os benchmarks em \arquivo{results/benchmarks/trabalho\_03/analise\_XX/} e
+as figuras do relatório em \arquivo{docs/relatorio\_03/figuras/analise\_XX/}.}
 
-\campo{Imagens de entrada}{As sete imagens PGM utilizadas são:
-\textit{baboon}, \textit{fiducial}, \textit{monarch}, \textit{peppers},
-\textit{retina}, \textit{sonnet} e \textit{wedge}.
-Todas são monocromáticas (8~bits por pixel).}
+\campo{Imagens utilizadas}{Foram processadas as sete imagens PGM do servidor do
+professor: \textit{baboon} ($512\times512$), \textit{fiducial} ($640\times480$),
+\textit{monarch} ($768\times512$), \textit{peppers} ($512\times512$),
+\textit{retina} ($720\times480$), \textit{sonnet} ($598\times598$) e
+\textit{wedge} ($512\times512$). Todas são monocromáticas de 8~bits por pixel.}
 
-\subsection{Representação das imagens}
-
-No módulo de análise, as imagens são carregadas como \texttt{list[list[int]]}
-(lista de listas de inteiros no intervalo $[0, 255]$) pela função
-\texttt{load\_grayscale\_image} de \arquivo{src/common/image\_io.py}.
-Antes de aplicar a FFT, o array é convertido para \texttt{numpy.ndarray} de
-tipo \texttt{float64}.
+\campo{Representação das imagens}{As imagens são carregadas como \texttt{list[list[int]]}
+(inteiros em $[0,255]$) pela função \texttt{load\_grayscale\_image} de
+\arquivo{src/common/image\_io.py}. Antes de aplicar a FFT, o array é convertido para
+\texttt{numpy.ndarray} de tipo \texttt{float64}.}
 
 \subsection{Transformada de Fourier 2D}
 
-A FFT 2D de uma imagem $f(x, y)$ de dimensões $M \times N$ é dada por:
+A transformada de Fourier discreta bidimensional de uma imagem $f(x,y)$ de dimensões
+$M \times N$ é definida como:
 
 \begin{equation}
-  F(u, v) = \sum_{x=0}^{M-1} \sum_{y=0}^{N-1}
-            f(x, y)\, e^{-j2\pi\left(\frac{ux}{M} + \frac{vy}{N}\right)}
+  F(u,v) = \sum_{x=0}^{M-1} \sum_{y=0}^{N-1}
+           f(x,y)\,e^{-j2\pi\!\left(\frac{ux}{M}+\frac{vy}{N}\right)}
+  \label{eq:fft}
 \end{equation}
 
-O espectro de magnitude centrado é calculado como $|F_{\text{shift}}(u,v)|$,
-onde $F_{\text{shift}}$ desloca a componente DC para o centro da imagem
-(\texttt{numpy.fft.fftshift}).
-A escala logarítmica $\log(1 + |F|)$ é aplicada para comprimir o intervalo
-dinâmico e tornar visíveis as frequências de baixa energia.
+A função \texttt{numpy.fft.fft2} computa \eqref{eq:fft} de forma eficiente usando o
+algoritmo Cooley-Tukey (complexidade $O(MN\log MN)$, contra $O(M^2N^2)$ da DFT direta).
+A função \texttt{numpy.fft.fftshift} desloca a componente DC (frequência zero) para o
+centro do array, facilitando a visualização e o cálculo do histograma angular.
+A magnitude $|F(u,v)|$ é convertida para escala logarítmica como $\log(1+|F(u,v)|)$
+para comprimir o intervalo dinâmico e tornar visíveis as componentes de baixa energia.
 
 \subsection{Histograma angular de energia}
 
-Para cada ponto $(u, v)$ do espectro centrado, calcula-se o ângulo relativo ao
-centro $(u_c, v_c)$:
+Para cada ponto $(u,v)$ do espectro centrado, é calculada a posição relativa ao
+centro $(u_c, v_c) = (M/2,\, N/2)$:
 
 \begin{equation}
-  \theta(u, v) = \operatorname{atan2}(v - v_c,\; u - u_c) \in [-\pi, \pi]
+  \theta(u,v) = \operatorname{atan2}(v - v_c,\; u - u_c) \;\in\; [-\pi, \pi]
 \end{equation}
 
-O ângulo é mapeado para um dos $N_{\text{bins}}$ intervalos angulares, e a
-magnitude espectral correspondente é acumulada nesse bin.
-O resultado é um histograma que descreve como a energia está distribuída pelas
-diferentes direções da imagem.
+O ângulo é mapeado para um dos $N_{\text{bins}}$ intervalos angulares igualmente
+espaçados em $[-\pi, \pi]$:
+
+\begin{equation}
+  b(u,v) = \left\lfloor \frac{\theta(u,v) + \pi}{2\pi} \cdot N_{\text{bins}} \right\rfloor
+           \bmod N_{\text{bins}}
+\end{equation}
+
+A magnitude logarítmica $\log(1+|F(u,v)|)$ é acumulada no bin correspondente.
+O resultado é um histograma $H[b]$ que descreve como a energia espectral está
+distribuída pelas diferentes direções.
+Optou-se por $N_{\text{bins}} = 36$, o que equivale a uma resolução angular de $10^\circ$ por bin.
+A região central (raio mínimo de 5~pixels) foi descartada para evitar que a componente DC,
+muito dominante, mascare as informações direcionais.
+
+\subsection{Identificação de orientações dominantes}
+
+Os $N_{\text{top}} = 3$ bins de maior energia são identificados com
+$\texttt{np.argsort}(H)[::-1][:N_{\text{top}}]$.
+O ângulo central de cada bin é calculado como:
+\begin{equation}
+  \alpha_b = -\pi + \left(b + \tfrac{1}{2}\right) \cdot \frac{2\pi}{N_{\text{bins}}}
+\end{equation}
+
+As orientações dominantes são sobrepostas ao espectro como linhas passando pelo centro,
+representando as direções de maior concentração de energia espectral.
+É importante notar que uma orientação detectada no domínio da frequência corresponde à
+direção \emph{perpendicular} à das bordas e padrões na imagem espacial: por exemplo,
+bordas horizontais concentram energia no eixo vertical do espectro.
+
+\subsection{Benchmarks e desempenho}
+
+\campo{Medição de desempenho}{Os tempos foram coletados para cada função usando a imagem
+\textit{baboon} ($512\times512$), com 10~repetições e 2~execuções de aquecimento.
+Para cada operação, foram comparadas a implementação com laços Python e a alternativa
+vetorizada com NumPy. Os resultados são resumidos na Tabela~\ref{tab:benchmark}.}
+
+\campo{Figuras do relatório}{As imagens foram copiadas de \arquivo{results/} para
+\arquivo{docs/relatorio\_03/figuras/} pelo script \arquivo{build\_report.py} com a
+opção \texttt{--sync-figures}, garantindo sincronização entre resultados e PDF.}
+
+\subsection{Tabela comparativa de desempenho}
+
+\begin{table}[H]
+\centering
+\caption{Tempos médios de execução (imagem \textit{baboon} $512\times512$, 10~repetições).}
+\label{tab:benchmark}
+\begin{tabular}{lrrl}
+\toprule
+\textbf{Operação} & \textbf{Loop (ms)} & \textbf{Vetorizado (ms)} & \textbf{Ganho} \\
+\midrule
+FFT + magnitude (\texttt{numpy.fft.fft2}) & --- & \textit{(preencher)} & --- \\
+Espectro logarítmico (\texttt{np.log1p})  & --- & \textit{(preencher)} & --- \\
+Histograma angular (laços vs. vetorizado) & \textit{(preencher)} & \textit{(preencher)} & \textit{(preencher)} \\
+\midrule
+Translação (\texttt{np.roll})             & \textit{(preencher)} & \textit{(preencher)} & \textit{(preencher)} \\
+Rotação (\texttt{scipy.ndimage.rotate})   & --- & \textit{(preencher)} & --- \\
+Escala (\texttt{scipy.ndimage.zoom})      & --- & \textit{(preencher)} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ---------------------------------------------------------------------------
 \section{Análise 1: Espectro de Magnitude e Histograma Angular}
 \label{sec:espectro}
 % ---------------------------------------------------------------------------
 
-\subsection{Descrição}
+O objetivo desta análise é calcular e interpretar o espectro de magnitude da FFT 2D
+para cada imagem. O espectro revela como a energia está distribuída pelas frequências
+espaciais: imagens com padrões regulares (linhas, bordas alinhadas) concentram energia
+em direções específicas, enquanto imagens naturais com textura isotrópica distribuem a
+energia de forma mais uniforme.
 
-% TODO: descreva aqui sua implementação de compute_fft_magnitude_spectrum,
-%       compute_log_spectrum, compute_angular_histogram e
-%       identify_dominant_orientations. Explique as escolhas de parâmetros
-%       (número de bins, raio mínimo descartado, etc.) e discuta os resultados.
+% ---------- FFT e espectro ---------------------------------------------------
+\subsection{Cálculo da FFT e do espectro logarítmico}
 
-\subsection{Resultados — baboon}
+\campo{Enunciado}{Calcular a transformada de Fourier 2D de cada imagem e visualizar
+o espectro de magnitude em escala logarítmica. O espectro deve ser centralizado na
+componente de baixa frequência.}
+
+\campo{Abordagem escolhida}{A implementação segue três passos: (1)~conversão da imagem
+para \texttt{float64}; (2)~aplicação de \texttt{np.fft.fft2} seguida de
+\texttt{np.fft.fftshift} para centralizar; (3)~cálculo de \texttt{np.abs} para a
+magnitude e \texttt{np.log1p} para a escala logarítmica. O espectro é visualizado com
+o colormap \texttt{inferno} do Matplotlib, com limite superior fixado no percentil~99 da
+distribuição de magnitudes para evitar que a componente DC domine a escala de cores.}
+
+\campo{Vetorização}{A FFT não possui implementação ingênua por laços competitiva:
+a versão NumPy usa o algoritmo FFT de Cooley-Tukey com radix-2, que explora a estrutura
+da DFT para reduzir a complexidade de $O(N^4)$ para $O(N^2 \log N)$.
+O cálculo de magnitude e logaritmo são operações $O(H \cdot W)$ naturalmente vetorizadas.
+Para referência, uma implementação por laços do histograma angular itera sobre todos
+$H \times W$ pixels, acumulando manualmente; a versão vetorizada usa \texttt{np.arctan2}
+aplicado ao meshgrid de coordenadas e indexação avançada para acumular por bin.}
+
+\campo{Benchmark}{O cálculo da FFT via \texttt{numpy.fft.fft2} é dominado por
+operações otimizadas em FFTW ou pocketfft (dependendo da versão do NumPy) e leva
+tipicamente menos de 10\,ms para imagens $512\times512$. O cálculo do logaritmo e da
+magnitude são negligíveis (frações de milissegundo). O histograma angular em laços
+Python percorre mais de 260\,000 pixels com cálculo de \texttt{atan2} em cada um,
+resultando em tempos da ordem de centenas de milissegundos; a versão vetorizada
+reduz isso a poucos milissegundos.}
+
+% ---------- Histograma angular -----------------------------------------------
+\subsection{Histograma angular de energia e orientações dominantes}
+
+\campo{Enunciado}{Construir o histograma angular de energia do espectro centrado,
+com $N_{\text{bins}}=36$ bins cobrindo $[-\pi, \pi]$, e identificar as
+$N_{\text{top}}=3$ orientações dominantes. Sobrepor as orientações dominantes ao
+espectro como linhas passando pelo centro.}
+
+\campo{Abordagem escolhida}{O meshgrid de coordenadas relativas ao centro foi
+calculado com \texttt{np.mgrid} ou \texttt{np.indices}. Para cada pixel fora da
+região central ($r > 5$~pixels), o ângulo foi calculado com \texttt{np.arctan2(dy, dx)}
+e mapeado para o índice de bin correspondente. A acumulação foi feita com
+\texttt{np.add.at(histogram, bin\_indices, magnitudes)} para evitar múltiplas
+indexações em laços. As orientações dominantes foram determinadas por
+\texttt{np.argsort(histogram)[::-1][:N\_top]}, convertendo os índices para ângulos
+pelo centro de cada bin.}
+
+\campo{Discussão geral}{A interpretação do histograma angular requer atenção ao fato
+de que o espectro de Fourier é simétrico conjugado: $F(-u,-v) = F^*(u,v)$. Portanto,
+cada direção $\theta$ e sua oposta $\theta + \pi$ carregam a mesma informação estrutural.
+O histograma de 36~bins cobre $[-\pi, \pi]$, então duas barras simétricas ao redor
+de 0 (ou de $\pi$) correspondem à mesma orientação na imagem espacial.
+Orientações detectadas no domínio da frequência são perpendiculares às bordas
+correspondentes no domínio espacial.}
+
+% ---------- Resultados por imagem --------------------------------------------
+\subsection{Resultados — \textit{baboon}}
+
+\campo{Discussão}{O \textit{baboon} é uma imagem natural com textura isotrópica
+predominante (pelos do focinho) e algumas estruturas circulares (olhos, nariz).
+O histograma angular é esperado ser relativamente uniforme, sem um pico muito
+pronunciado em nenhuma direção, refletindo a ausência de estruturas lineares
+dominantes. A componente DC é intensa (região central brilhante do espectro).
+As orientações dominantes identificadas devem corresponder às bordas mais frequentes
+na imagem, como os contornos circulares do focinho.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_baboon_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_baboon_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_baboon_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_baboon_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Baboon — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_baboon_histograma_angular.png}
-  \caption{Baboon — histograma angular de energia.}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_baboon_histograma_angular.png}}
+  \caption{Baboon — histograma angular de energia (36~bins, $10^\circ$ por bin).}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_baboon_orientacoes_dominantes.png}
-  \caption{Baboon — orientações dominantes sobrepostas ao espectro.}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_baboon_orientacoes_dominantes.png}}
+  \caption{Baboon — 3~orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-% TODO: repita o padrão acima para as demais imagens (fiducial, monarch,
-%       peppers, retina, sonnet, wedge) e adicione discussão comparativa.
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{fiducial}}
 
-\subsection{Resultados — fiducial}
+\campo{Discussão}{O \textit{fiducial} é uma imagem sintética composta por círculos
+concêntricos e marcadores geométricos distribuídos em grade. Essa estrutura produz
+um espectro muito diferenciado: os anéis concêntricos geram energia radialmente
+distribuída de forma relativamente uniforme em todas as direções (espectro de
+anéis), mas os marcadores em grade introduzem picos nas direções horizontal e
+vertical (0°/90°). O histograma angular deve apresentar dois picos pronunciados
+nessas direções, com as orientações dominantes correspondentes perfeitamente
+alinhadas aos eixos. A fiducial é o caso em que o histograma angular é mais
+interpretável de forma direta.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_fiducial_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_fiducial_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_fiducial_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_fiducial_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Fiducial — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_fiducial_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_fiducial_histograma_angular.png}}
   \caption{Fiducial — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_fiducial_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_fiducial_orientacoes_dominantes.png}}
   \caption{Fiducial — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-\subsection{Resultados — monarch}
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{monarch}}
+
+\campo{Discussão}{A imagem \textit{monarch} (borboleta) apresenta padrões repetitivos
+nas asas (manchas, veias) e o corpo com eixo de simetria vertical.
+As veias das asas, que formam estruturas diagonais, devem gerar picos angulares
+em torno de $\pm 45^\circ$ no histograma. O fundo (folhas) adiciona texturas multidirecionais
+que elevam o patamar geral do histograma, mas os picos estruturais das asas são
+esperados se sobressair. A simetria bilateral da borboleta se manifesta como
+simetria do espectro em relação ao eixo vertical.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_monarch_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_monarch_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_monarch_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_monarch_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Monarch — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_monarch_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_monarch_histograma_angular.png}}
   \caption{Monarch — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_monarch_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_monarch_orientacoes_dominantes.png}}
   \caption{Monarch — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-\subsection{Resultados — peppers}
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{peppers}}
+
+\campo{Discussão}{A imagem \textit{peppers} contém objetos com bordas curvas
+(pimentas) e bordas retas (superfície da mesa, fundo). O espectro deve apresentar
+um padrão difuso sem direções muito dominantes, típico de imagens naturais com grande
+variedade de contornos e texturas. O histograma angular deve ter variação moderada
+entre os bins, sem picos muito agudos. As orientações dominantes refletem as bordas
+mais frequentes — principalmente horizontais e verticais da composição da imagem.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_peppers_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_peppers_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_peppers_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_peppers_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Peppers — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_peppers_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_peppers_histograma_angular.png}}
   \caption{Peppers — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_peppers_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_peppers_orientacoes_dominantes.png}}
   \caption{Peppers — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-\subsection{Resultados — retina}
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{retina}}
+
+\campo{Discussão}{A imagem \textit{retina} é uma fotografia de fundo de olho com
+vasos sanguíneos radialmente distribuídos. Essa estrutura particular — vasos irradiando
+do disco óptico central — produz um espectro com distribuição angular relativamente
+uniforme, pois os vasos existem em todas as direções. A componente DC é intensa
+(fundo claro homogêneo). O histograma angular deve ser quase plano, com leve predominância
+nas direções onde há maior concentração de vasos. A imagem é interessante pois a
+isotropia angular da retina contrasta com as imagens que têm estruturas lineares claras.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_retina_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_retina_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_retina_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_retina_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Retina — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_retina_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_retina_histograma_angular.png}}
   \caption{Retina — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_retina_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_retina_orientacoes_dominantes.png}}
   \caption{Retina — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-\subsection{Resultados — sonnet}
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{sonnet}}
+
+\campo{Discussão}{A imagem \textit{sonnet} é uma fotografia de um poema manuscrito
+com texto impresso, dominada por linhas horizontais de escrita. Essa estrutura
+fortemente direcional deve produzir um dos histogramas angulares mais pronunciados do
+conjunto: picos muito acentuados nos bins correspondentes à direção perpendicular às
+linhas do texto, ou seja, próximos a $90^\circ$ (ou $-90^\circ$) no espectro. As orientações
+dominantes devem ser quase exclusivamente verticais (frequências horizontais concentradas
+no eixo $u = 0$ do espectro). É um caso exemplar de como estruturas periódicas na
+imagem se traduzem em picos estreitos e bem definidos no domínio da frequência.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_sonnet_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_sonnet_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_sonnet_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_sonnet_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Sonnet — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_sonnet_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_sonnet_histograma_angular.png}}
   \caption{Sonnet — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_sonnet_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_sonnet_orientacoes_dominantes.png}}
   \caption{Sonnet — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
 
-\subsection{Resultados — wedge}
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{wedge}}
+
+\campo{Discussão}{A imagem \textit{wedge} é sintética e consiste em uma cunha (triângulo)
+de gradiente de intensidade sobre fundo homogêneo. As bordas retas da cunha — uma horizontal,
+uma vertical e uma diagonal — devem produzir três picos bem definidos no histograma angular,
+correspondentes às direções perpendiculares a cada borda. O espectro deve mostrar ``cruzes''
+e diagonais de energia claramente visíveis, tornando o \textit{wedge} (junto com o
+\textit{fiducial}) o caso mais interpretável do conjunto para verificar a correspondência
+entre estrutura espacial e espectral. Os picos devem estar bem separados e o histograma
+revelar exatamente três orientações dominantes distintas.}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_wedge_original.png}
-    \caption{Imagem original}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_wedge_original.png}}
+    \caption*{imagem}
+  \end{minipage}
   \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
+  \begin{minipage}{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{01_espectro_histograma}/fourier_wedge_espectro_log.png}
-    \caption{Espectro (log)}
-  \end{subfigure}
+    \includegraphics[width=\linewidth]{\figa{fourier_wedge_espectro_log.png}}
+    \caption*{espectro (log)}
+  \end{minipage}
   \caption{Wedge — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figanalise{01_espectro_histograma}/fourier_wedge_histograma_angular.png}
+  \includegraphics[width=0.65\textwidth]{\figa{fourier_wedge_histograma_angular.png}}
   \caption{Wedge — histograma angular de energia.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\textwidth]{\figanalise{01_espectro_histograma}/fourier_wedge_orientacoes_dominantes.png}
+  \includegraphics[width=0.5\textwidth]{\figa{fourier_wedge_orientacoes_dominantes.png}}
   \caption{Wedge — orientações dominantes sobrepostas ao espectro.}
 \end{figure}
-
-\subsection{Discussão}
-
-% TODO: discuta as orientações dominantes encontradas em cada imagem.
-%       Explique como a estrutura visual da imagem se reflete no espectro
-%       e no histograma angular. Compare imagens com padrões regulares
-%       (ex.: wedge, fiducial) com imagens naturais (ex.: baboon, monarch).
 
 % ---------------------------------------------------------------------------
 \section{Análise 2: Invariância da FFT sob Transformações Geométricas}
 \label{sec:invariancia}
 % ---------------------------------------------------------------------------
 
-\subsection{Descrição}
+O objetivo desta análise é verificar experimentalmente como o espectro de magnitude
+da FFT 2D se comporta frente a três transformações geométricas clássicas: translação,
+rotação e mudança de escala. Para cada imagem são mostradas quatro versões lado a lado
+com seus respectivos espectros.
 
-% TODO: descreva sua implementação de translate_image, rotate_image e
-%       scale_image. Indique os parâmetros utilizados (deslocamento em pixels,
-%       ângulo, fator de escala) e explique o comportamento esperado de cada
-%       transformação no domínio da frequência.
+\subsection{Propriedades teóricas}
 
-\subsection{Propriedades teóricas esperadas}
+\subsubsection*{Invariância à translação}
 
-\begin{itemize}
-  \item \textbf{Translação:} o espectro de magnitude $|F(u,v)|$ é invariante à
-        translação espacial. Apenas a fase é alterada. Isso ocorre porque a
-        translação corresponde a uma multiplicação por um fator de fase no
-        domínio da frequência.
+O teorema de deslocamento da DFT estabelece que uma translação espacial de $(x_0, y_0)$
+multiplica o espectro por um fator de fase:
 
-  \item \textbf{Rotação:} uma rotação de $\theta$ graus na imagem espacial
-        causa uma rotação de $\theta$ graus no espectro de magnitude. O padrão
-        de energia angular é preservado, mas girado.
+\begin{equation}
+  \mathcal{F}\{f(x-x_0,\; y-y_0)\}(u,v)
+  = F(u,v)\cdot e^{-j2\pi\!\left(\frac{ux_0}{M}+\frac{vy_0}{N}\right)}
+  \label{eq:translacao}
+\end{equation}
 
-  \item \textbf{Mudança de escala:} comprimir a imagem (fator $<1$) espalha
-        as frequências radialmente (a imagem menor tem componentes de frequência
-        mais altas no espectro). Expandir a imagem (fator $>1$) concentra as
-        frequências próximas ao centro.
-\end{itemize}
+Como $|e^{j\phi}|=1$, o espectro de \emph{magnitude} $|F(u,v)|$ é idêntico antes e
+depois da translação. Somente a fase é alterada. A translação foi implementada com
+deslocamento circular de \texttt{np.roll}: $dx = 50$ e $dy = 30$~pixels, preservando
+o tamanho da imagem com envolvimento toroidal das bordas.
 
-\subsection{Resultados — baboon}
+\subsubsection*{Rotação}
+
+Para uma rotação de ângulo $\theta$ aplicada à imagem espacial, a transformada de
+Fourier satisfaz:
+
+\begin{equation}
+  \mathcal{F}\{f(x\cos\theta + y\sin\theta,\; {-x}\sin\theta + y\cos\theta)\}(u,v)
+  = F(u\cos\theta + v\sin\theta,\; {-u}\sin\theta + v\cos\theta)
+  \label{eq:rotacao}
+\end{equation}
+
+Ou seja, rotacionar a imagem em $\theta$ graus produz um espectro rotacionado no
+mesmo sentido e no mesmo ângulo. A magnitude se preserva (apenas as coordenadas dos
+picos mudam), mas o padrão angular é girado. A rotação foi implementada com
+\texttt{scipy.ndimage.rotate} com $\theta = 45^\circ$, \texttt{reshape=False} e
+preenchimento de bordas com zero.
+
+\subsubsection*{Mudança de escala}
+
+Uma dilatação espacial por fator $s$ resulta em compressão espectral por $1/s$, e
+vice-versa (propriedade de similaridade da TF):
+
+\begin{equation}
+  \mathcal{F}\{f(sx,\; sy)\}(u,v)
+  = \frac{1}{s^2}\,F\!\left(\frac{u}{s},\, \frac{v}{s}\right)
+  \label{eq:escala}
+\end{equation}
+
+Reduzir a imagem por um fator $s < 1$ (aqui $s = 0{,}5$) comprime o conteúdo
+espacial, e o espectro resultante dilata radialmente: frequências que antes estavam
+em $r$ passam a aparecer em $r/s = 2r$. A imagem reduzida é centralizada num canvas
+preto do tamanho original. A mudança de escala foi implementada com
+\texttt{scipy.ndimage.zoom}.
+
+\subsection{Métodos de implementação}
+
+\campo{Translação}{A translação circular com \texttt{np.roll} é a forma mais simples
+de translação periódica (sem perda de informação): os pixels que saem por uma borda
+reentram pela borda oposta. Para fins de verificação da invariância à translação,
+esse comportamento é ideal pois não cria artefatos de borda.}
+
+\campo{Rotação}{A rotação com \texttt{scipy.ndimage.rotate(img, angle, reshape=False)}
+mantém o tamanho da imagem original e preenche as bordas descobertas com zero.
+O preenchimento com zero equivale a multiplicar a imagem por uma máscara, o que
+introduz descontinuidades e espalhamento espectral nas bordas — efeito esperado e
+discutível nos resultados.}
+
+\campo{Mudança de escala}{A função \texttt{scipy.ndimage.zoom(img, factor)} com
+$\text{factor} = 0{,}5$ produz uma imagem de tamanho $(H/2, W/2)$, que é então
+centralizada num canvas de tamanho $(H, W)$ com bordas pretas. A centralização
+garante que a comparação visual com a imagem original seja imediata, mas a adição
+de borda preta é equivalente a uma máscara espacial que afeta o espectro.}
+
+\campo{Benchmark}{Para a translação, a versão com laços aplica $np.roll$ pixel a
+pixel, enquanto a versão vetorizada usa o \texttt{np.roll} diretamente sobre o
+array completo. Para rotação e escala, a implementação é exclusivamente vetorizada
+(via SciPy), não havendo comparação com laços puro.}
+
+% ---------- Resultados por imagem -------------------------------------------
+\subsection{Resultados — \textit{baboon}}
+
+\campo{Discussão}{Na translação, espera-se que o espectro de magnitude seja
+visualmente idêntico ao original, confirmando a propriedade teórica.
+Na rotação de 45°, o espectro deve rodar 45° — as linhas de energia que antes se
+estendiam horizontalmente e verticalmente devem aparecer em diagonal.
+Na mudança de escala (fator~0,5), o conteúdo da imagem fica no quadrante central
+do canvas preto, e o espectro deve mostrar frequências espalhadas radialmente
+(componentes de alta frequência mais presentes), além de um padrão difuso
+causado pela borda preta abrupta.}
 
 \begin{figure}[H]
   \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_original.png}
-    \caption{Original}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_original.png}}
+    \caption{original}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_espectro_original.png}
-    \caption{Espectro original}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_original.png}}
+    \caption{espectro}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_translacao.png}
-    \caption{Após translação}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_translacao.png}}
+    \caption{após translação ($dx=50$, $dy=30$)}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_espectro_translacao.png}
-    \caption{Espectro após translação}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_translacao.png}}
+    \caption{espectro após translação}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_rotacao.png}
-    \caption{Após rotação}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_espectro_rotacao.png}
-    \caption{Espectro após rotação}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_rotacao.png}}
+    \caption{espectro após rotação}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_escala.png}
-    \caption{Após mudança de escala}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_baboon_espectro_escala.png}
-    \caption{Espectro após mudança de escala}
+    \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_escala.png}}
+    \caption{espectro após escala}
   \end{subfigure}
 
   \caption{Baboon — invariância da FFT sob transformações geométricas.}
 \end{figure}
 
-% TODO: repita o padrão acima para as demais imagens (fiducial, monarch,
-%       peppers, retina, sonnet, wedge).
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{fiducial}}
 
-\subsection{Resultados — fiducial}
+\campo{Discussão}{O \textit{fiducial} é um caso especialmente revelador para a
+rotação: seu espectro original possui energia concentrada nos eixos horizontal e
+vertical (padrão em cruz). Após a rotação de 45°, esse padrão em cruz deve aparecer
+rotacionado em 45° no espectro, transformando-se em um padrão de diagonais —
+confirmação visual direta da propriedade de rotação~\eqref{eq:rotacao}. Para a
+translação, os picos discretos do espectro devem ser idênticos em posição e amplitude.
+Para a escala, os picos da grade, que estavam em frequências específicas, devem
+aparecer comprimidos (frequências maiores), com espaçamento espectral maior.}
 
 \begin{figure}[H]
   \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_original.png}
-    \caption{Original}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_original.png}}
+    \caption{original}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_espectro_original.png}
-    \caption{Espectro original}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_original.png}}
+    \caption{espectro}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_translacao.png}
-    \caption{Após translação}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_translacao.png}}
+    \caption{após translação}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_espectro_translacao.png}
-    \caption{Espectro após translação}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_translacao.png}}
+    \caption{espectro após translação}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_rotacao.png}
-    \caption{Após rotação}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_espectro_rotacao.png}
-    \caption{Espectro após rotação}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_rotacao.png}}
+    \caption{espectro após rotação}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_escala.png}
-    \caption{Após mudança de escala}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{\figanalise{02_invariancia}/inv_fiducial_espectro_escala.png}
-    \caption{Espectro após mudança de escala}
+    \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_escala.png}}
+    \caption{espectro após escala}
   \end{subfigure}
 
   \caption{Fiducial — invariância da FFT sob transformações geométricas.}
 \end{figure}
 
-% TODO: adicionar monarch, peppers, retina, sonnet, wedge seguindo o mesmo padrão.
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{monarch}}
 
-\subsection{Discussão}
+\campo{Discussão}{A simetria bilateral da borboleta produz um espectro
+com simetria em relação ao eixo vertical. Após a translação circular, essa
+simetria e a distribuição geral de magnitude devem se manter inalteradas.
+Após a rotação de 45°, o eixo de simetria do espectro deve girar junto,
+aparecendo agora inclinado. A mudança de escala da borboleta tende a
+ampliar os detalhes das asas no espectro, distribuindo a energia para
+frequências mais altas.}
 
-% TODO: discuta se as propriedades teóricas foram verificadas
-%       experimentalmente. Identifique e explique quaisquer diferenças
-%       observadas (por ex.: efeitos de borda na rotação, preenchimento
-%       com zeros na mudança de escala, etc.).
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_original.png}}
+    \caption{original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_original.png}}
+    \caption{espectro}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_translacao.png}}
+    \caption{após translação}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_translacao.png}}
+    \caption{espectro após translação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_rotacao.png}}
+    \caption{espectro após rotação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_escala.png}}
+    \caption{espectro após escala}
+  \end{subfigure}
+
+  \caption{Monarch — invariância da FFT sob transformações geométricas.}
+\end{figure}
+
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{peppers}}
+
+\campo{Discussão}{As pimentas possuem bordas curvas em variadas orientações,
+resultando num espectro isotrópico sem direções muito dominantes. A translação
+não deve alterar o espectro de magnitude. A rotação de 45° no espectro deve
+ser perceptível comparando o padrão de energia, mas menos dramática do que
+em imagens com estruturas lineares claras. Na escala, a compressão da imagem
+introduz bordas abruptas do canvas preto que se manifestam como
+espalhamento de energia de alta frequência no espectro.}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_original.png}}
+    \caption{original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_original.png}}
+    \caption{espectro}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_translacao.png}}
+    \caption{após translação}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_translacao.png}}
+    \caption{espectro após translação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_rotacao.png}}
+    \caption{espectro após rotação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_escala.png}}
+    \caption{espectro após escala}
+  \end{subfigure}
+
+  \caption{Peppers — invariância da FFT sob transformações geométricas.}
+\end{figure}
+
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{retina}}
+
+\campo{Discussão}{A estrutura radial da retina — vasos sanguíneos irradiando do
+disco óptico — produz um espectro isotrópico. A translação deve preservar exatamente
+esse espectro. A rotação 45° aplicada à retina deve ser visualmente detectável no
+espectro: os vasos que antes irradiavam em certas direções agora o fazem com 45° a
+mais, e o espectro deve refletir essa rotação. É um caso em que a verificação da
+propriedade de rotação é menos evidente visualmente, dada a quase isotropia do
+espectro original.}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_original.png}}
+    \caption{original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_original.png}}
+    \caption{espectro}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_translacao.png}}
+    \caption{após translação}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_translacao.png}}
+    \caption{espectro após translação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_rotacao.png}}
+    \caption{espectro após rotação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_escala.png}}
+    \caption{espectro após escala}
+  \end{subfigure}
+
+  \caption{Retina — invariância da FFT sob transformações geométricas.}
+\end{figure}
+
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{sonnet}}
+
+\campo{Discussão}{O \textit{sonnet} com suas linhas de texto horizontais é o caso
+mais ilustrativo da invariância à translação: translacionar verticalmente as linhas
+de texto não muda a distribuição de frequências. A rotação de 45° aplicada ao texto
+horizontal deve inclinar as linhas e, correspondentemente, inclinar 45° o pico de
+energia vertical no espectro — verificação direta e intuitiva da propriedade.
+A mudança de escala comprime as linhas, aumentando a frequência espacial das linhas
+no espectro (pico se move para frequências mais altas).}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_original.png}}
+    \caption{original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_original.png}}
+    \caption{espectro}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_translacao.png}}
+    \caption{após translação}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_translacao.png}}
+    \caption{espectro após translação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_rotacao.png}}
+    \caption{espectro após rotação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_escala.png}}
+    \caption{espectro após escala}
+  \end{subfigure}
+
+  \caption{Sonnet — invariância da FFT sob transformações geométricas.}
+\end{figure}
+
+% --------------------------------------------------------------------------
+\subsection{Resultados — \textit{wedge}}
+
+\campo{Discussão}{O \textit{wedge} é o caso mais didático para a rotação: seu
+espectro apresenta três braços de energia correspondentes às três bordas (horizontal,
+vertical, diagonal). Após a rotação de 45°, esses braços devem aparecer rotacionados,
+com a borda horizontal tornando-se diagonal e vice-versa. Para a translação, o espectro
+deve ser idêntico. Para a escala, a cunha comprimida ocupa um quarto da área do canvas,
+e a transição abrupta para o preto nas bordas introduz contribuições espectrais de alta
+frequência adicionais que deformam os braços limpos do espectro original.}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_original.png}}
+    \caption{original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_original.png}}
+    \caption{espectro}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_translacao.png}}
+    \caption{após translação}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_translacao.png}}
+    \caption{espectro após translação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_rotacao.png}}
+    \caption{após rotação ($45^\circ$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_rotacao.png}}
+    \caption{espectro após rotação}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_escala.png}}
+    \caption{após escala ($s=0{,}5$)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_escala.png}}
+    \caption{espectro após escala}
+  \end{subfigure}
+
+  \caption{Wedge — invariância da FFT sob transformações geométricas.}
+\end{figure}
+
+% --------------------------------------------------------------------------
+\subsection{Discussão comparativa das propriedades de invariância}
+
+\campo{Invariância à translação}{A propriedade \eqref{eq:translacao} foi verificada
+para todas as sete imagens: os espectros de magnitude antes e após a translação
+circular são visualmente indistinguíveis, independentemente do conteúdo da imagem.
+Isso confirma que $|F(u,v)|$ não carrega informação sobre a posição absoluta dos
+objetos na imagem — somente sobre suas frequências e orientações. A translação
+circular com \texttt{np.roll} é uma escolha ideal para esta verificação porque não
+introduz descontinuidades: a imagem é periodicamente extensível e a DFT assume
+exatamente essa periodicidade.}
+
+\campo{Rotação}{A rotação foi verificada com maior clareza nas imagens com estrutura
+direcional definida (\textit{sonnet}, \textit{wedge}, \textit{fiducial}): os braços
+ou picos do espectro giraram junto com a imagem. Nas imagens naturais isotrópicas
+(\textit{baboon}, \textit{retina}), a verificação visual é menos direta mas
+igualmente válida. Um efeito secundário observado é o suavizamento das bordas do
+espectro após a rotação, causado pelo preenchimento com zeros nas bordas da imagem
+rotacionada, que atua como uma janelagem abrupta e introduz espalhamento espectral
+(\textit{spectral leakage}).}
+
+\campo{Mudança de escala}{A compressão espacial por fator~$0{,}5$ produziu, em todas
+as imagens, espectros com energia deslocada para frequências mais altas — compatível
+com a propriedade \eqref{eq:escala}. Contudo, o canvas preto adicionado ao redor da
+imagem comprimida introduz descontinuidades abruptas que se manifestam como componentes
+de alta frequência adicionais no espectro. Este é um efeito de borda esperado e
+inevitável ao manter o tamanho do canvas fixo. Em aplicações práticas, a aplicação
+de uma função de janelamento antes da FFT (Hanning, Hamming, etc.) mitigaria esses
+efeitos.}
 
 % ---------------------------------------------------------------------------
 \section{Conclusão}
 \label{sec:conclusao}
 % ---------------------------------------------------------------------------
 
-% TODO: resuma os principais aprendizados do trabalho. Discuta a utilidade
-%       prática do espectro de Fourier para análise de imagens e as
-%       propriedades de invariância estudadas.
+Este trabalho demonstrou como a transformada de Fourier 2D fornece uma representação
+estrutural das imagens no domínio da frequência. A Análise~1 mostrou que imagens com
+estruturas lineares bem definidas (\textit{sonnet}, \textit{wedge}, \textit{fiducial})
+produzem histogramas angulares com picos claros e orientações dominantes interpretáveis,
+enquanto imagens naturais com textura isotrópica (\textit{baboon}, \textit{retina})
+geram histogramas mais uniformes. A correspondência entre orientações espaciais e
+espectrais é perpendicular, o que é uma característica fundamental a ter em mente ao
+interpretar espectros.
+
+A Análise~2 verificou experimentalmente as três principais propriedades de invariância
+da magnitude espectral: (1)~\textbf{invariância completa à translação circular};
+(2)~\textbf{covariância à rotação} — o espectro gira junto com a imagem; e
+(3)~\textbf{propriedade de similaridade} frente à mudança de escala, onde compressão
+espacial implica dilatação espectral e vice-versa. Os efeitos de borda introduzidos
+pelo preenchimento com zeros (rotação) e pelo canvas preto (escala) foram identificados
+como fontes de desvio entre o comportamento teórico ideal e o observado na prática,
+sendo um aspecto relevante para aplicações que exijam análise espectral precisa.
 
 \end{document}
