@@ -61,11 +61,9 @@ def compute_fft_magnitude_spectrum(image: list[list[int]]) -> np.ndarray:
     Returns:
         np.ndarray: espectro de magnitude 2D, shape (H, W), dtype float64.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar compute_fft_magnitude_spectrum — "
-        "use np.fft.fft2() + np.fft.fftshift() + np.abs()"
-    )
+    img = np.array(image, dtype=np.float64)
+    fft_shifted = np.fft.fftshift(np.fft.fft2(img))
+    return np.abs(fft_shifted)
 
 
 def compute_log_spectrum(magnitude: np.ndarray) -> np.ndarray:
@@ -78,10 +76,7 @@ def compute_log_spectrum(magnitude: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: espectro em escala logarítmica (float64).
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar compute_log_spectrum — use np.log1p(magnitude)"
-    )
+    return np.log1p(magnitude)
 
 
 # ---------------------------------------------------------------------------
@@ -112,11 +107,23 @@ def compute_angular_histogram(
     Returns:
         np.ndarray: vetor 1D de tamanho n_bins com a energia por direção.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar compute_angular_histogram — "
-        "use np.arctan2() para calcular os ângulos e acumule as magnitudes por bin"
+    h, w = log_spectrum.shape
+    cy, cx = h // 2, w // 2
+
+    rows, cols = np.indices((h, w))
+    dy = rows - cy
+    dx = cols - cx
+    r = np.hypot(dy, dx)
+    mask = r > 5  # descarta componente DC e vizinhança imediata
+
+    theta = np.arctan2(dy, dx)  # [-pi, pi]
+    bin_idx = (
+        np.floor((theta + np.pi) / (2 * np.pi) * n_bins).astype(int) % n_bins
     )
+
+    histogram = np.zeros(n_bins)
+    np.add.at(histogram, bin_idx[mask], log_spectrum[mask])
+    return histogram
 
 
 def identify_dominant_orientations(
@@ -137,11 +144,12 @@ def identify_dominant_orientations(
         list[float]: ângulos (em radianos) das orientações dominantes,
                      do mais energético ao menos energético.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar identify_dominant_orientations — "
-        "use np.argsort(histogram)[::-1][:n_top] para encontrar os bins mais energéticos"
-    )
+    top_bins = np.argsort(histogram)[::-1][:n_top]
+    n = len(histogram)
+    angles = [
+        -np.pi + (b + 0.5) / n * 2 * np.pi for b in top_bins
+    ]
+    return angles
 
 
 # ---------------------------------------------------------------------------

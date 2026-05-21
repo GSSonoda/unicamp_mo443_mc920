@@ -217,7 +217,7 @@ def sync_report_assets(report_num: int = 1) -> None:
     else:
         raise ValueError(f"Número de relatório inválido: {report_num}. Use 1, 2 ou 3.")
 
-def build_report(report_num: int = 1) -> Path:
+def build_report(report_num: int = 1, force: bool = False) -> Path:
     if report_num == 1:
         report_dir = REPORT_DIR
     elif report_num == 2:
@@ -232,6 +232,10 @@ def build_report(report_num: int = 1) -> Path:
 
     print(f"[info] Fonte do relatorio: {tex_path}", flush=True)
     print(f"[info] PDF do relatorio: {pdf_path}", flush=True)
+
+    if force:
+        for ext in (".fdb_latexmk", ".aux", ".toc"):
+            (report_dir / f"relatorio{ext}").unlink(missing_ok=True)
 
     try:
         run(

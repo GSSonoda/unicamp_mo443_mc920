@@ -78,11 +78,10 @@ def translate_image(
     Returns:
         list[list[int]]: imagem transladada, mesmo tamanho da entrada.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar translate_image — use np.roll(img, dy, axis=0) "
-        "seguido de np.roll(img, dx, axis=1)"
-    )
+    img = np.array(image, dtype=np.uint8)
+    img = np.roll(img, dy, axis=0)
+    img = np.roll(img, dx, axis=1)
+    return img.tolist()
 
 
 def rotate_image(
@@ -103,11 +102,10 @@ def rotate_image(
     Returns:
         list[list[int]]: imagem rotacionada, mesmo tamanho da entrada.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar rotate_image — use scipy.ndimage.rotate() "
-        "com reshape=False para manter o tamanho original"
-    )
+    from scipy.ndimage import rotate
+    img = np.array(image, dtype=np.float64)
+    rotated = rotate(img, angle_degrees, reshape=False, cval=0)
+    return np.clip(rotated, 0, 255).astype(np.uint8).tolist()
 
 
 def scale_image(
@@ -132,11 +130,21 @@ def scale_image(
     Returns:
         list[list[int]]: imagem redimensionada, mesmo tamanho da entrada.
     """
-    # --- Implemente aqui ---
-    raise NotImplementedError(
-        "TODO: implementar scale_image — use scipy.ndimage.zoom() "
-        "e centralize no canvas original"
-    )
+    from scipy.ndimage import zoom
+    img = np.array(image, dtype=np.float64)
+    h, w = img.shape
+    scaled = np.clip(zoom(img, factor), 0, 255).astype(np.uint8)
+    sh, sw = scaled.shape
+    canvas = np.zeros((h, w), dtype=np.uint8)
+    if factor < 1:
+        y0 = (h - sh) // 2
+        x0 = (w - sw) // 2
+        canvas[y0:y0 + sh, x0:x0 + sw] = scaled
+    else:
+        y0 = (sh - h) // 2
+        x0 = (sw - w) // 2
+        canvas = scaled[y0:y0 + h, x0:x0 + w]
+    return canvas.tolist()
 
 
 # ---------------------------------------------------------------------------
@@ -153,11 +161,9 @@ def compute_fft_magnitude_spectrum(image: list[list[int]]) -> np.ndarray:
     Returns:
         np.ndarray: espectro em escala logarítmica (float64), shape (H, W).
     """
-    # --- Implemente aqui (pode copiar/importar de analise_01) ---
-    raise NotImplementedError(
-        "TODO: implementar compute_fft_magnitude_spectrum — "
-        "use np.fft.fft2() + np.fft.fftshift() + np.abs() + np.log1p()"
-    )
+    img = np.array(image, dtype=np.float64)
+    fft_shifted = np.fft.fftshift(np.fft.fft2(img))
+    return np.log1p(np.abs(fft_shifted))
 
 
 # ---------------------------------------------------------------------------

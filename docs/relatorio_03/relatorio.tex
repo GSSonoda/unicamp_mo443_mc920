@@ -39,7 +39,6 @@
 
 \newcommand{\arquivo}[1]{\nolinkurl{#1}}
 \newcommand{\campo}[2]{\textbf{#1.} #2\par}
-\newcommand{\figdir}[1]{figuras/#1}
 \newcommand{\figa}[1]{figuras/analise_01_espectro_histograma/#1}
 \newcommand{\figb}[1]{figuras/analise_02_invariancia/#1}
 
@@ -118,7 +117,7 @@ utiliza \textit{Pillow} para leitura de imagens PGM e gravação de PNG, \textit
 para a FFT (\texttt{numpy.fft}) e operações matriciais, \textit{SciPy}
 (\texttt{scipy.ndimage}) para as transformações geométricas e \textit{Matplotlib} para
 geração dos espectros coloridos, histogramas angulares e visualizações de orientações
-dominantes. A infraestrutura comum de download de entradas, benchmarks e geração de relatório
+dominantes. A infraestrutura comum de download de entradas e geração de relatório
 é centralizada em \arquivo{src/common/}.}
 
 \campo{Organização dos arquivos}{O código do Trabalho~3 está em
@@ -126,8 +125,7 @@ dominantes. A infraestrutura comum de download de entradas, benchmarks e geraç�
 \arquivo{analise\_01\_espectro\_histograma/main.py} e
 \arquivo{analise\_02\_invariancia/main.py}.
 As entradas ficam em \arquivo{data/input/trabalho\_03/analise\_XX/},
-os resultados em \arquivo{results/trabalho\_03/analise\_XX/},
-os benchmarks em \arquivo{results/benchmarks/trabalho\_03/analise\_XX/} e
+os resultados em \arquivo{results/trabalho\_03/analise\_XX/} e
 as figuras do relatório em \arquivo{docs/relatorio\_03/figuras/analise\_XX/}.}
 
 \campo{Imagens utilizadas}{Foram processadas as sete imagens PGM do servidor do
@@ -198,38 +196,6 @@ representando as direções de maior concentração de energia espectral.
 direção \emph{perpendicular} à das bordas e padrões na imagem espacial: por exemplo,
 bordas horizontais concentram energia no eixo vertical do espectro.
 
-\subsection{Benchmarks e desempenho}
-
-\campo{Medição de desempenho}{Os tempos foram coletados para cada função usando a imagem
-\textit{baboon} ($512\times512$), com 10~repetições e 2~execuções de aquecimento.
-Para cada operação, foram comparadas a implementação com laços Python e a alternativa
-vetorizada com NumPy. Os resultados são resumidos na Tabela~\ref{tab:benchmark}.}
-
-\campo{Figuras do relatório}{As imagens foram copiadas de \arquivo{results/} para
-\arquivo{docs/relatorio\_03/figuras/} pelo script \arquivo{build\_report.py} com a
-opção \texttt{--sync-figures}, garantindo sincronização entre resultados e PDF.}
-
-\subsection{Tabela comparativa de desempenho}
-
-\begin{table}[H]
-\centering
-\caption{Tempos médios de execução (imagem \textit{baboon} $512\times512$, 10~repetições).}
-\label{tab:benchmark}
-\begin{tabular}{lrrl}
-\toprule
-\textbf{Operação} & \textbf{Loop (ms)} & \textbf{Vetorizado (ms)} & \textbf{Ganho} \\
-\midrule
-FFT + magnitude (\texttt{numpy.fft.fft2}) & --- & \textit{(preencher)} & --- \\
-Espectro logarítmico (\texttt{np.log1p})  & --- & \textit{(preencher)} & --- \\
-Histograma angular (laços vs. vetorizado) & \textit{(preencher)} & \textit{(preencher)} & \textit{(preencher)} \\
-\midrule
-Translação (\texttt{np.roll})             & \textit{(preencher)} & \textit{(preencher)} & \textit{(preencher)} \\
-Rotação (\texttt{scipy.ndimage.rotate})   & --- & \textit{(preencher)} & --- \\
-Escala (\texttt{scipy.ndimage.zoom})      & --- & \textit{(preencher)} & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 % ---------------------------------------------------------------------------
 \section{Análise 1: Espectro de Magnitude e Histograma Angular}
 \label{sec:espectro}
@@ -259,17 +225,8 @@ distribuição de magnitudes para evitar que a componente DC domine a escala de 
 a versão NumPy usa o algoritmo FFT de Cooley-Tukey com radix-2, que explora a estrutura
 da DFT para reduzir a complexidade de $O(N^4)$ para $O(N^2 \log N)$.
 O cálculo de magnitude e logaritmo são operações $O(H \cdot W)$ naturalmente vetorizadas.
-Para referência, uma implementação por laços do histograma angular itera sobre todos
-$H \times W$ pixels, acumulando manualmente; a versão vetorizada usa \texttt{np.arctan2}
-aplicado ao meshgrid de coordenadas e indexação avançada para acumular por bin.}
-
-\campo{Benchmark}{O cálculo da FFT via \texttt{numpy.fft.fft2} é dominado por
-operações otimizadas em FFTW ou pocketfft (dependendo da versão do NumPy) e leva
-tipicamente menos de 10\,ms para imagens $512\times512$. O cálculo do logaritmo e da
-magnitude são negligíveis (frações de milissegundo). O histograma angular em laços
-Python percorre mais de 260\,000 pixels com cálculo de \texttt{atan2} em cada um,
-resultando em tempos da ordem de centenas de milissegundos; a versão vetorizada
-reduz isso a poucos milissegundos.}
+A versão vetorizada do histograma angular usa \texttt{np.arctan2} aplicado ao meshgrid
+de coordenadas e \texttt{np.add.at} para acumular por bin sem laços Python.}
 
 % ---------- Histograma angular -----------------------------------------------
 \subsection{Histograma angular de energia e orientações dominantes}
@@ -280,7 +237,7 @@ $N_{\text{top}}=3$ orientações dominantes. Sobrepor as orientações dominante
 espectro como linhas passando pelo centro.}
 
 \campo{Abordagem escolhida}{O meshgrid de coordenadas relativas ao centro foi
-calculado com \texttt{np.mgrid} ou \texttt{np.indices}. Para cada pixel fora da
+calculado com \texttt{np.indices}. Para cada pixel fora da
 região central ($r > 5$~pixels), o ângulo foi calculado com \texttt{np.arctan2(dy, dx)}
 e mapeado para o índice de bin correspondente. A acumulação foi feita com
 \texttt{np.add.at(histogram, bin\_indices, magnitudes)} para evitar múltiplas
@@ -309,30 +266,34 @@ na imagem, como os contornos circulares do focinho.}
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_baboon_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_baboon_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Baboon — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_baboon_histograma_angular.png}}
-  \caption{Baboon — histograma angular de energia (36~bins, $10^\circ$ por bin).}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_baboon_orientacoes_dominantes.png}}
-  \caption{Baboon — 3~orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_baboon_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_baboon_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Baboon — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -350,30 +311,34 @@ interpretável de forma direta.}
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_fiducial_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_fiducial_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Fiducial — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_fiducial_histograma_angular.png}}
-  \caption{Fiducial — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_fiducial_orientacoes_dominantes.png}}
-  \caption{Fiducial — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_fiducial_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_fiducial_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Fiducial — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -389,30 +354,34 @@ simetria do espectro em relação ao eixo vertical.}
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_monarch_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_monarch_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Monarch — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_monarch_histograma_angular.png}}
-  \caption{Monarch — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_monarch_orientacoes_dominantes.png}}
-  \caption{Monarch — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_monarch_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_monarch_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Monarch — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -427,30 +396,34 @@ mais frequentes — principalmente horizontais e verticais da composição da im
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_peppers_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_peppers_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Peppers — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_peppers_histograma_angular.png}}
-  \caption{Peppers — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_peppers_orientacoes_dominantes.png}}
-  \caption{Peppers — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_peppers_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_peppers_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Peppers — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -466,30 +439,34 @@ isotropia angular da retina contrasta com as imagens que têm estruturas lineare
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_retina_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_retina_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Retina — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_retina_histograma_angular.png}}
-  \caption{Retina — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_retina_orientacoes_dominantes.png}}
-  \caption{Retina — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_retina_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_retina_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Retina — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -506,30 +483,34 @@ imagem se traduzem em picos estreitos e bem definidos no domínio da frequência
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_sonnet_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_sonnet_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Sonnet — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_sonnet_histograma_angular.png}}
-  \caption{Sonnet — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_sonnet_orientacoes_dominantes.png}}
-  \caption{Sonnet — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_sonnet_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_sonnet_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Sonnet — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -546,30 +527,34 @@ revelar exatamente três orientações dominantes distintas.}
 
 \begin{figure}[H]
   \centering
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_wedge_original.png}}
-    \caption*{imagem}
-  \end{minipage}
+    \caption{original}
+  \end{subfigure}
   \hfill
-  \begin{minipage}{0.45\textwidth}
+  \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\linewidth]{\figa{fourier_wedge_espectro_log.png}}
-    \caption*{espectro (log)}
-  \end{minipage}
+    \caption{espectro (log)}
+  \end{subfigure}
   \caption{Wedge — imagem original e espectro de magnitude logarítmico.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{\figa{fourier_wedge_histograma_angular.png}}
-  \caption{Wedge — histograma angular de energia.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.5\textwidth]{\figa{fourier_wedge_orientacoes_dominantes.png}}
-  \caption{Wedge — orientações dominantes sobrepostas ao espectro.}
+  \begin{subfigure}[b]{0.57\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_wedge_histograma_angular.png}}
+    \caption{histograma angular (36~bins, $10^\circ$/bin)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.37\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{\figa{fourier_wedge_orientacoes_dominantes.png}}
+    \caption{orientações dominantes}
+  \end{subfigure}
+  \caption{Wedge — distribuição angular de energia e orientações dominantes.}
 \end{figure}
 
 % ---------------------------------------------------------------------------
@@ -653,11 +638,6 @@ centralizada num canvas de tamanho $(H, W)$ com bordas pretas. A centralização
 garante que a comparação visual com a imagem original seja imediata, mas a adição
 de borda preta é equivalente a uma máscara espacial que afeta o espectro.}
 
-\campo{Benchmark}{Para a translação, a versão com laços aplica $np.roll$ pixel a
-pixel, enquanto a versão vetorizada usa o \texttt{np.roll} diretamente sobre o
-array completo. Para rotação e escala, a implementação é exclusivamente vetorizada
-(via SciPy), não havendo comparação com laços puro.}
-
 % ---------- Resultados por imagem -------------------------------------------
 \subsection{Resultados — \textit{baboon}}
 
@@ -681,7 +661,7 @@ causado pela borda preta abrupta.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -695,7 +675,11 @@ causado pela borda preta abrupta.}
     \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Baboon — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_baboon_rotacao.png}}
@@ -719,8 +703,7 @@ causado pela borda preta abrupta.}
     \includegraphics[width=\textwidth]{\figb{inv_baboon_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Baboon — invariância da FFT sob transformações geométricas.}
+  \caption{Baboon — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -746,7 +729,7 @@ aparecer comprimidos (frequências maiores), com espaçamento espectral maior.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -760,7 +743,11 @@ aparecer comprimidos (frequências maiores), com espaçamento espectral maior.}
     \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Fiducial — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_fiducial_rotacao.png}}
@@ -784,8 +771,7 @@ aparecer comprimidos (frequências maiores), com espaçamento espectral maior.}
     \includegraphics[width=\textwidth]{\figb{inv_fiducial_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Fiducial — invariância da FFT sob transformações geométricas.}
+  \caption{Fiducial — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -810,7 +796,7 @@ frequências mais altas.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -824,7 +810,11 @@ frequências mais altas.}
     \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Monarch — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_monarch_rotacao.png}}
@@ -848,8 +838,7 @@ frequências mais altas.}
     \includegraphics[width=\textwidth]{\figb{inv_monarch_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Monarch — invariância da FFT sob transformações geométricas.}
+  \caption{Monarch — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -874,7 +863,7 @@ espalhamento de energia de alta frequência no espectro.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -888,7 +877,11 @@ espalhamento de energia de alta frequência no espectro.}
     \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Peppers — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_peppers_rotacao.png}}
@@ -912,8 +905,7 @@ espalhamento de energia de alta frequência no espectro.}
     \includegraphics[width=\textwidth]{\figb{inv_peppers_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Peppers — invariância da FFT sob transformações geométricas.}
+  \caption{Peppers — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -938,7 +930,7 @@ espectro original.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -952,7 +944,11 @@ espectro original.}
     \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Retina — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_retina_rotacao.png}}
@@ -976,8 +972,7 @@ espectro original.}
     \includegraphics[width=\textwidth]{\figb{inv_retina_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Retina — invariância da FFT sob transformações geométricas.}
+  \caption{Retina — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -1002,7 +997,7 @@ no espectro (pico se move para frequências mais altas).}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -1016,7 +1011,11 @@ no espectro (pico se move para frequências mais altas).}
     \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Sonnet — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_sonnet_rotacao.png}}
@@ -1040,8 +1039,7 @@ no espectro (pico se move para frequências mais altas).}
     \includegraphics[width=\textwidth]{\figb{inv_sonnet_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Sonnet — invariância da FFT sob transformações geométricas.}
+  \caption{Sonnet — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------
@@ -1066,7 +1064,7 @@ frequência adicionais que deformam os braços limpos do espectro original.}
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_original.png}}
-    \caption{espectro}
+    \caption{espectro original}
   \end{subfigure}
 
   \begin{subfigure}[b]{0.45\textwidth}
@@ -1080,7 +1078,11 @@ frequência adicionais que deformam os braços limpos do espectro original.}
     \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_translacao.png}}
     \caption{espectro após translação}
   \end{subfigure}
+  \caption{Wedge — invariância à translação: espectros de magnitude idênticos.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
   \begin{subfigure}[b]{0.45\textwidth}
     \centering
     \includegraphics[width=\textwidth]{\figb{inv_wedge_rotacao.png}}
@@ -1104,8 +1106,7 @@ frequência adicionais que deformam os braços limpos do espectro original.}
     \includegraphics[width=\textwidth]{\figb{inv_wedge_espectro_escala.png}}
     \caption{espectro após escala}
   \end{subfigure}
-
-  \caption{Wedge — invariância da FFT sob transformações geométricas.}
+  \caption{Wedge — rotação ($45^\circ$) e escala ($s=0{,}5$).}
 \end{figure}
 
 % --------------------------------------------------------------------------

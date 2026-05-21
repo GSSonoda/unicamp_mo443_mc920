@@ -35,7 +35,7 @@ def main() -> int:
         print(f"[info] Gerando o PDF do relatorio {args.report}", flush=True)
         if args.sync_figures:
             sync_report_assets(args.report)
-        build_report(args.report)
+        build_report(args.report, force=args.sync_figures)
         return 0
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"[erro] {exc}")
