@@ -7,9 +7,11 @@ from subprocess import CalledProcessError, run
 from src.common.paths import (
     REPORT_02_DIR,
     REPORT_03_DIR,
+    REPORT_04_DIR,
     REPORT_DIR,
     report_02_figures_dir_for,
     report_03_figures_dir_for,
+    report_04_figures_dir_for,
     report_figures_dir_for,
 )
 
@@ -33,6 +35,28 @@ def copy_report_files_03(
         copied[filename] = destination
 
     print(f"[info] Pasta das figuras do relatorio 3: {target_dir}")
+    return copied
+
+
+def copy_report_files_04(
+    part: str,
+    files: dict[str, Path],
+) -> dict[str, Path]:
+    target_dir = report_04_figures_dir_for(part)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    missing_sources = [source for source in files.values() if not source.exists()]
+    if missing_sources:
+        missing = ", ".join(str(path) for path in missing_sources)
+        raise FileNotFoundError(f"Arquivos necessarios para o relatorio nao encontrados: {missing}")
+
+    copied: dict[str, Path] = {}
+    for filename, source in files.items():
+        destination = target_dir / filename
+        copy2(source, destination)
+        copied[filename] = destination
+
+    print(f"[info] Pasta das figuras do relatorio 4: {target_dir}")
     return copied
 
 
@@ -207,6 +231,20 @@ def sync_report_assets_03() -> None:
     print("[ok] Figuras do relatorio 3 atualizadas", flush=True)
 
 
+def sync_report_assets_04() -> None:
+    from src.trabalho_04.parte_01_transformacoes.main import (
+        report_files as p01_report_files,
+    )
+    from src.trabalho_04.parte_02_registro.main import (
+        report_files as p02_report_files,
+    )
+
+    print("[info] Atualizando figuras do relatorio 4", flush=True)
+    copy_report_files_04("t4_transformacoes_geometricas", p01_report_files())
+    copy_report_files_04("t4_registro_imagens", p02_report_files())
+    print("[ok] Figuras do relatorio 4 atualizadas", flush=True)
+
+
 def sync_report_assets(report_num: int = 1) -> None:
     if report_num == 1:
         _sync_report_assets_01()
@@ -214,8 +252,12 @@ def sync_report_assets(report_num: int = 1) -> None:
         sync_report_assets_02()
     elif report_num == 3:
         sync_report_assets_03()
+    elif report_num == 4:
+        sync_report_assets_04()
     else:
-        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1, 2 ou 3.")
+        raise ValueError(
+            f"Número de relatório inválido: {report_num}. Use 1, 2, 3 ou 4."
+        )
 
 def build_report(report_num: int = 1, force: bool = False) -> Path:
     if report_num == 1:
@@ -224,8 +266,12 @@ def build_report(report_num: int = 1, force: bool = False) -> Path:
         report_dir = REPORT_02_DIR
     elif report_num == 3:
         report_dir = REPORT_03_DIR
+    elif report_num == 4:
+        report_dir = REPORT_04_DIR
     else:
-        raise ValueError(f"Número de relatório inválido: {report_num}. Use 1, 2 ou 3.")
+        raise ValueError(
+            f"Número de relatório inválido: {report_num}. Use 1, 2, 3 ou 4."
+        )
 
     tex_path = report_dir / "relatorio.tex"
     pdf_path = report_dir / "relatorio.pdf"

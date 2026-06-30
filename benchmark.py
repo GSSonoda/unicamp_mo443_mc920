@@ -39,6 +39,11 @@ _T3_ANALYSES = {
     2: "src.trabalho_03.analise_02_invariancia.main",
 }
 
+_T4_PARTS = {
+    1: "src.trabalho_04.parte_01_transformacoes.main",
+    2: "src.trabalho_04.parte_02_registro.main",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -52,16 +57,17 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help=(
             "Numero do exercicio (trabalho 1: 1-13), "
-            "do metodo (trabalho 2: 1-12) "
-            "ou da analise (trabalho 3: 1-2)."
+            "do metodo (trabalho 2: 1-12), "
+            "da analise (trabalho 3: 1-2) "
+            "ou da parte (trabalho 4: 1-2)."
         ),
     )
     parser.add_argument(
         "--trabalho",
         type=int,
-        choices=[1, 2, 3],
+        choices=[1, 2, 3, 4],
         default=1,
-        metavar="{1,2,3}",
+        metavar="{1,2,3,4}",
         help="Numero do trabalho (padrao: 1).",
     )
     parser.add_argument(
@@ -90,8 +96,10 @@ def main() -> int:
         registry = _T1_EXERCISES
     elif args.trabalho == 2:
         registry = _T2_METHODS
-    else:
+    elif args.trabalho == 3:
         registry = _T3_ANALYSES
+    else:
+        registry = _T4_PARTS
     limit = max(registry)
 
     if args.numero not in registry:

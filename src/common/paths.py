@@ -12,6 +12,8 @@ REPORT_02_DIR = DOCS_DIR / "relatorio_02"
 REPORT_02_FIGURES_DIR = REPORT_02_DIR / "figuras"
 REPORT_03_DIR = DOCS_DIR / "relatorio_03"
 REPORT_03_FIGURES_DIR = REPORT_03_DIR / "figuras"
+REPORT_04_DIR = DOCS_DIR / "relatorio_04"
+REPORT_04_FIGURES_DIR = REPORT_04_DIR / "figuras"
 BENCHMARKS_DIR = ROOT_DIR / "results" / "benchmarks"
 
 
@@ -36,6 +38,8 @@ def input_dir_for(exercise: int | str) -> Path:
         return INPUTS_DIR / "trabalho_01" / name
     if name.startswith("analise_"):
         return INPUTS_DIR / "trabalho_03" / name
+    if name.startswith("t4_"):
+        return INPUTS_DIR / "trabalho_04" / name
     return INPUTS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -45,6 +49,8 @@ def results_dir_for(exercise: int | str) -> Path:
         return RESULTS_DIR / "trabalho_01" / name
     if name.startswith("analise_"):
         return RESULTS_DIR / "trabalho_03" / name
+    if name.startswith("t4_"):
+        return RESULTS_DIR / "trabalho_04" / name
     return RESULTS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -54,6 +60,8 @@ def benchmarks_dir_for(exercise: int | str) -> Path:
         return BENCHMARKS_DIR / "trabalho_01" / name
     if name.startswith("analise_"):
         return BENCHMARKS_DIR / "trabalho_03" / name
+    if name.startswith("t4_"):
+        return BENCHMARKS_DIR / "trabalho_04" / name
     return BENCHMARKS_DIR / "trabalho_02" / _method_section(name) / name
 
 
@@ -67,3 +75,7 @@ def report_02_figures_dir_for(method: str) -> Path:
 
 def report_03_figures_dir_for(analysis: str) -> Path:
     return REPORT_03_FIGURES_DIR / analysis
+
+
+def report_04_figures_dir_for(part: str) -> Path:
+    return REPORT_04_FIGURES_DIR / part

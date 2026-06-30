@@ -1,6 +1,6 @@
 # MC920 / MO443 — Introdução ao Processamento Digital de Imagens
 
-Este repositório contém os Trabalhos 1, 2 e 3 da disciplina.
+Este repositório contém os Trabalhos 1, 2, 3 e 4 da disciplina.
 
 ## 1. Montar o ambiente
 
@@ -25,19 +25,35 @@ python3 main.py NUMERO --trabalho 2
 
 # Trabalho 3 — análises 1 e 2
 python3 main.py NUMERO --trabalho 3
+
+# Trabalho 4 — parte 1 (transformações geométricas) e parte 2 (registro/panorama)
+python3 main.py NUMERO --trabalho 4
 ```
 
 Para refazer arquivos já gerados, adicione `--overwrite`.
+
+O Trabalho 4 também fornece o programa de linha de comando exigido pelo
+enunciado (uma transformação geométrica por execução, formato PNG):
+
+```bash
+python3 -m src.trabalho_04.parte_01_transformacoes.cli \
+    -e 2.25 -m bilinear -i entrada.png -o saida.png   # escala
+python3 -m src.trabalho_04.parte_01_transformacoes.cli \
+    -a 30 -m bicubica -i entrada.png -o saida.png      # rotação
+```
+
+Métodos de interpolação aceitos: `vizinho`, `bilinear`, `bicubica`, `lagrange`.
 
 ---
 
 ## 3. Executar tudo
 
 ```bash
-python3 run_all.py                # todos os trabalhos (1, 2 e 3)
+python3 run_all.py                # todos os trabalhos (1, 2, 3 e 4)
 python3 run_all.py --trabalho 1   # só o trabalho 1
 python3 run_all.py --trabalho 2   # só o trabalho 2
 python3 run_all.py --trabalho 3   # só o trabalho 3
+python3 run_all.py --trabalho 4   # só o trabalho 4
 ```
 
 ---
@@ -67,6 +83,7 @@ Gerar o PDF de um trabalho:
 python3 build_report.py --report 1   # trabalho 1
 python3 build_report.py --report 2   # trabalho 2
 python3 build_report.py --report 3   # trabalho 3
+python3 build_report.py --report 4   # trabalho 4
 ```
 
 Atualizar as figuras a partir dos resultados locais antes de compilar:
@@ -75,6 +92,7 @@ Atualizar as figuras a partir dos resultados locais antes de compilar:
 python3 build_report.py --report 1 --sync-figures
 python3 build_report.py --report 2 --sync-figures
 python3 build_report.py --report 3 --sync-figures
+python3 build_report.py --report 4 --sync-figures
 ```
 
 > As figuras são copiadas de `results/` para `docs/relatorio_0X/figuras/` pelo `--sync-figures`.
@@ -92,11 +110,13 @@ pip install -r requirements.txt
 python3 run_all.py --trabalho 1
 python3 run_all.py --trabalho 2
 python3 run_all.py --trabalho 3
+python3 run_all.py --trabalho 4
 
 # 3. Gerar os PDFs
 python3 build_report.py --report 1 --sync-figures
 python3 build_report.py --report 2 --sync-figures
 python3 build_report.py --report 3 --sync-figures
+python3 build_report.py --report 4 --sync-figures
 ```
 
 ---
@@ -110,14 +130,18 @@ src/
 ├── trabalho_02/
 │   ├── secao_01/         # metodo_01_global … metodo_09_mediana  (limiarização)
 │   └── secao_02/         # metodo_10_pixels … metodo_12_histogramas  (transições em vídeo)
-└── trabalho_03/
-    ├── analise_01_espectro_histograma/   # FFT + espectro log + histograma angular
-    └── analise_02_invariancia/           # invariância sob translação/rotação/escala
+├── trabalho_03/
+│   ├── analise_01_espectro_histograma/   # FFT + espectro log + histograma angular
+│   └── analise_02_invariancia/           # invariância sob translação/rotação/escala
+└── trabalho_04/
+    ├── parte_01_transformacoes/  # escala/rotação + 4 interpoladores (do zero) + CLI
+    └── parte_02_registro/        # registro/panorama (SIFT/SURF/BRIEF/ORB, OpenCV)
 
 docs/
 ├── relatorio_01/         # LaTeX + PDF do trabalho 1
 ├── relatorio_02/         # LaTeX + PDF do trabalho 2
-└── relatorio_03/         # LaTeX + PDF do trabalho 3
+├── relatorio_03/         # LaTeX + PDF do trabalho 3
+└── relatorio_04/         # LaTeX + PDF do trabalho 4
 
 data/input/               # entradas baixadas na primeira execução (não versionadas)
 results/                  # saídas geradas na execução (não versionadas)
